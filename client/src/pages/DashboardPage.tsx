@@ -18,7 +18,7 @@ type SummaryResponse = {
 
 /* --- UI constants --- */
 const CATEGORY_ICONS: Record<string, string> = {
-  Food: "�️",
+  Food: "🍔",
   Transport: "🚙",
   Utilities: "⚡",
   Entertainment: "🎭",
