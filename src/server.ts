@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "./prismaClient";
+import Anthropic from "@anthropic-ai/sdk";
 
 // simple random id generator for in-memory users when prisma is unavailable
 function cryptoRandomId() {
@@ -16,6 +17,7 @@ function cryptoRandomId() {
 const app = express();
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 
 app.use(cors());
 app.use(express.json());
@@ -48,9 +50,10 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
 const authSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  persona: z.enum(["STUDENT", "YOUNG_PROFESSIONAL", "INVESTOR"]).optional(),
 });
 
-const users: Array<{ id: string; email: string; password: string; createdAt: Date }> = [];
+const users: Array<{ id: string; email: string; password: string; persona: string; createdAt: Date }> = [];
 
 // In-memory expense store for when Prisma is unavailable
 const expenses: Array<{
@@ -105,12 +108,12 @@ async function findUserByEmail(email: string) {
     return users.find((u) => u.email === email) || null;
   }
 }
-async function createUser(email: string, hashed: string) {
+async function createUser(email: string, hashed: string, persona = "YOUNG_PROFESSIONAL") {
   try {
-    const user = await prisma.user.create({ data: { email, password: hashed } });
+    const user = await prisma.user.create({ data: { email, password: hashed, persona: persona as any } });
     return user;
   } catch (e) {
-    const u = { id: cryptoRandomId(), email, password: hashed, createdAt: new Date() };
+    const u = { id: cryptoRandomId(), email, password: hashed, persona, createdAt: new Date() };
     users.push(u);
     return u;
   }
@@ -119,10 +122,11 @@ async function getUserById(id: string) {
   try {
     return await prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, createdAt: true },
+      select: { id: true, email: true, persona: true, createdAt: true },
     });
   } catch (e) {
-    return users.find((u) => u.id === id) || null;
+    const u = users.find((u) => u.id === id);
+    return u ? { id: u.id, email: u.email, persona: u.persona, createdAt: u.createdAt } : null;
   }
 }
 
@@ -131,15 +135,15 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
   if (!parsed.success) {
     return res.status(400).json({ errors: parsed.error.flatten() });
   }
-  const { email, password } = parsed.data;
+  const { email, password, persona } = parsed.data;
   const existing = await findUserByEmail(email);
   if (existing) {
     return res.status(409).json({ message: "Email already registered" });
   }
   const hashed = await bcrypt.hash(password, 10);
-  const user = await createUser(email, hashed);
+  const user = await createUser(email, hashed, persona ?? "YOUNG_PROFESSIONAL");
   const token = createToken(user.id);
-  return res.status(201).json({ token });
+  return res.status(201).json({ token, persona: persona ?? "YOUNG_PROFESSIONAL" });
 });
 
 app.post("/api/auth/login", async (req: Request, res: Response) => {
@@ -165,27 +169,101 @@ app.get("/api/auth/me", authMiddleware, async (req: AuthRequest, res: Response) 
   return res.json({ user });
 });
 
-// Seed test user for development
+// Seed demo user with rich 3-month dataset
 app.post("/api/auth/seed", async (req: Request, res: Response) => {
   const testEmail = "demo@example.com";
   const testPassword = "demo@123";
-  
+
   try {
-    const existing = await findUserByEmail(testEmail);
-    if (existing) {
-      return res.json({ message: "Demo user already exists", email: testEmail, password: testPassword });
+    let user = await findUserByEmail(testEmail);
+    if (!user) {
+      const hashed = await bcrypt.hash(testPassword, 10);
+      user = await createUser(testEmail, hashed, "YOUNG_PROFESSIONAL");
     }
-    
-    const hashed = await bcrypt.hash(testPassword, 10);
-    const user = await createUser(testEmail, hashed);
-    res.json({ 
-      message: "Demo user created", 
-      email: testEmail, 
-      password: testPassword,
-      token: createToken(user.id)
-    });
+
+    const uid = user.id;
+    const now = new Date();
+
+    // Clear existing in-memory demo data for this user
+    const removeUser = (arr: Array<{ userId: string }>) => {
+      for (let i = arr.length - 1; i >= 0; i--) {
+        if (arr[i]!.userId === uid) arr.splice(i, 1);
+      }
+    };
+    removeUser(expenses as any);
+    removeUser(income as any);
+    removeUser(budgets as any);
+    removeUser(goals as any);
+
+    // Helper to make dates within a specific month
+    const d = (monthsAgo: number, day: number) => {
+      const dt = new Date(now.getFullYear(), now.getMonth() - monthsAgo, day);
+      return dt;
+    };
+
+    // --- 3 months of income ---
+    income.push(
+      { id: cryptoRandomId(), userId: uid, title: "Monthly Salary", amount: 350000, source: "Salary", date: d(2, 1), notes: null, createdAt: d(2, 1) },
+      { id: cryptoRandomId(), userId: uid, title: "Freelance Project - Web Design", amount: 85000, source: "Freelance", date: d(2, 15), notes: "Client: TechCorp", createdAt: d(2, 15) },
+      { id: cryptoRandomId(), userId: uid, title: "Monthly Salary", amount: 350000, source: "Salary", date: d(1, 1), notes: null, createdAt: d(1, 1) },
+      { id: cryptoRandomId(), userId: uid, title: "Freelance Project - Dashboard UI", amount: 120000, source: "Freelance", date: d(1, 18), notes: "Client: StartupXYZ", createdAt: d(1, 18) },
+      { id: cryptoRandomId(), userId: uid, title: "Monthly Salary", amount: 350000, source: "Salary", date: d(0, 1), notes: null, createdAt: d(0, 1) },
+      { id: cryptoRandomId(), userId: uid, title: "Investment Dividend", amount: 45000, source: "Investment", date: d(0, 10), notes: "Q1 dividend payout", createdAt: d(0, 10) },
+    );
+
+    // --- 3 months of expenses ---
+    const expData = [
+      // 2 months ago
+      { cat: "Food", amt: 28000, day: 3, mo: 2, note: "Grocery shopping" },
+      { cat: "Transport", amt: 15000, day: 5, mo: 2, note: "Fuel & Uber" },
+      { cat: "Utilities", amt: 22000, day: 7, mo: 2, note: "Electricity & Internet" },
+      { cat: "Entertainment", amt: 18000, day: 12, mo: 2, note: "Streaming & cinema" },
+      { cat: "Shopping", amt: 35000, day: 20, mo: 2, note: "Clothing" },
+      { cat: "Health", amt: 12000, day: 25, mo: 2, note: "Gym membership" },
+      // 1 month ago
+      { cat: "Food", amt: 31000, day: 2, mo: 1, note: "Grocery + restaurant" },
+      { cat: "Transport", amt: 12500, day: 6, mo: 1, note: "Fuel" },
+      { cat: "Utilities", amt: 21000, day: 8, mo: 1, note: "Bills" },
+      { cat: "Entertainment", amt: 25000, day: 14, mo: 1, note: "Concert tickets" },
+      { cat: "Shopping", amt: 48000, day: 22, mo: 1, note: "Electronics" },
+      { cat: "Health", amt: 12000, day: 28, mo: 1, note: "Gym & pharmacy" },
+      { cat: "Other", amt: 8000, day: 29, mo: 1, note: "Miscellaneous" },
+      // Current month
+      { cat: "Food", amt: 26000, day: 3, mo: 0, note: "Weekly groceries" },
+      { cat: "Transport", amt: 9500, day: 5, mo: 0, note: "Uber & fuel" },
+      { cat: "Utilities", amt: 22000, day: 7, mo: 0, note: "Electricity bill" },
+      { cat: "Entertainment", amt: 14000, day: 11, mo: 0, note: "Netflix & games" },
+      { cat: "Shopping", amt: 22000, day: 16, mo: 0, note: "Home goods" },
+      { cat: "Health", amt: 12000, day: 20, mo: 0, note: "Gym membership" },
+    ];
+    for (const e of expData) {
+      expenses.push({ id: cryptoRandomId(), userId: uid, title: e.note, amount: e.amt, category: e.cat, date: d(e.mo, e.day), note: e.note, recurring: false });
+    }
+
+    // --- Budgets for current month ---
+    const budgetData = [
+      { category: "Food", limit: 35000 },
+      { category: "Transport", limit: 15000 },
+      { category: "Utilities", limit: 25000 },
+      { category: "Entertainment", limit: 20000 },
+      { category: "Shopping", limit: 40000 },
+      { category: "Health", limit: 15000 },
+    ];
+    for (const b of budgetData) {
+      budgets.push({ id: cryptoRandomId(), userId: uid, month: now.getMonth() + 1, year: now.getFullYear(), category: b.category, limit: b.limit });
+    }
+
+    // --- Savings Goals ---
+    goals.push(
+      { id: cryptoRandomId(), userId: uid, name: "Emergency Fund", targetAmount: 500000, deadline: new Date(now.getFullYear() + 1, 5, 30), savedAmount: 185000, createdAt: d(2, 1) },
+      { id: cryptoRandomId(), userId: uid, name: "MacBook Pro", targetAmount: 900000, deadline: new Date(now.getFullYear(), now.getMonth() + 4, 1), savedAmount: 360000, createdAt: d(1, 15) },
+      { id: cryptoRandomId(), userId: uid, name: "Vacation — Dubai Trip", targetAmount: 750000, deadline: new Date(now.getFullYear() + 1, 2, 15), savedAmount: 120000, createdAt: d(0, 5) },
+    );
+
+    const token = createToken(uid);
+    res.json({ message: "Demo account ready with 3 months of data", email: testEmail, password: testPassword, token });
   } catch (err) {
-    res.json({ message: "Could not create demo user", error: (err as Error).message });
+    res.status(500).json({ message: "Seed failed", error: (err as Error).message });
   }
 });
 
@@ -799,6 +877,111 @@ app.get("/api/summary", authMiddleware, async (req: AuthRequest, res: Response) 
       netBalance,
       categories,
     });
+  }
+});
+
+// AI Insights endpoint — calls Claude with the user's financial snapshot
+app.get("/api/insights", authMiddleware, async (req: AuthRequest, res: Response) => {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ message: "AI insights not configured" });
+  }
+
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+
+  // Gather financial data (use Prisma when available, fall back to in-memory)
+  let userExpenses: Array<{ category: string; amount: number; note?: string | null }> = [];
+  let userIncome: Array<{ amount: number; source: string }> = [];
+  let userBudgets: Array<{ category: string; limit: number }> = [];
+  let userGoals: Array<{ name: string; targetAmount: number; savedAmount: number; deadline: Date }> = [];
+  let persona = "YOUNG_PROFESSIONAL";
+
+  try {
+    const [dbExpenses, dbIncome, dbBudgets, dbGoals, dbUser] = await Promise.all([
+      prisma.expense.findMany({ where: { userId: req.userId!, date: { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) } } }),
+      prisma.income.findMany({ where: { userId: req.userId!, date: { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) } } } as any),
+      prisma.budget.findMany({ where: { userId: req.userId!, month, year } }),
+      prisma.goal.findMany({ where: { userId: req.userId! } }),
+      prisma.user.findUnique({ where: { id: req.userId! }, select: { persona: true } }),
+    ]);
+    userExpenses = dbExpenses;
+    userIncome = dbIncome as any;
+    userBudgets = dbBudgets;
+    userGoals = dbGoals;
+    if (dbUser?.persona) persona = String(dbUser.persona);
+  } catch {
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 1);
+    userExpenses = expenses.filter((e) => e.userId === req.userId && e.date >= monthStart && e.date < monthEnd);
+    userIncome = income.filter((i) => i.userId === req.userId && i.date >= monthStart && i.date < monthEnd);
+    userBudgets = budgets.filter((b) => b.userId === req.userId && b.month === month && b.year === year);
+    userGoals = goals.filter((g) => g.userId === req.userId);
+    persona = users.find((u) => u.id === req.userId)?.persona ?? "YOUNG_PROFESSIONAL";
+  }
+
+  const totalIncome = userIncome.reduce((s, i) => s + i.amount, 0);
+  const totalExpenses = userExpenses.reduce((s, e) => s + e.amount, 0);
+  const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0;
+
+  const categoryBreakdown = userExpenses.reduce((acc: Record<string, number>, e) => {
+    acc[e.category] = (acc[e.category] ?? 0) + e.amount;
+    return acc;
+  }, {});
+
+  const budgetAlerts = userBudgets
+    .map((b) => ({ category: b.category, limit: b.limit, spent: categoryBreakdown[b.category] ?? 0 }))
+    .filter((b) => b.spent > 0);
+
+  const goalsInfo = userGoals.map((g) => ({
+    name: g.name,
+    target: g.targetAmount,
+    saved: g.savedAmount,
+    progress: Math.round((g.savedAmount / g.targetAmount) * 100),
+    deadline: g.deadline,
+  }));
+
+  const personaLabel = persona === "STUDENT" ? "student" : persona === "INVESTOR" ? "investor" : "young professional";
+
+  const prompt = `You are a personal finance advisor. Analyze this user's financial data and provide exactly 4 concise, actionable insights tailored for a ${personaLabel}.
+
+Financial Snapshot (Current Month):
+- Total Income: ₦${totalIncome.toLocaleString()}
+- Total Expenses: ₦${totalExpenses.toLocaleString()}
+- Net Balance: ₦${(totalIncome - totalExpenses).toLocaleString()}
+- Savings Rate: ${savingsRate}%
+
+Spending by Category:
+${Object.entries(categoryBreakdown).map(([cat, amt]) => `- ${cat}: ₦${amt.toLocaleString()}`).join("\n")}
+
+Budget Performance:
+${budgetAlerts.map((b) => `- ${b.category}: spent ₦${b.spent.toLocaleString()} of ₦${b.limit.toLocaleString()} limit (${Math.round((b.spent / b.limit) * 100)}%)`).join("\n")}
+
+Savings Goals:
+${goalsInfo.map((g) => `- ${g.name}: ${g.progress}% saved (₦${g.saved.toLocaleString()} / ₦${g.target.toLocaleString()})`).join("\n")}
+
+Return a JSON array of exactly 4 insight objects. Each object must have:
+- "title": short title (max 6 words)
+- "message": actionable insight (max 25 words)
+- "type": one of "success", "warning", "tip", "alert"
+- "icon": a single relevant emoji
+
+Respond with ONLY the JSON array, no other text.`;
+
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 600,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const text = (message.content[0] as { type: string; text: string }).text.trim();
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("Invalid AI response format");
+    const insights = JSON.parse(jsonMatch[0]);
+    res.json({ insights });
+  } catch (err) {
+    res.status(500).json({ message: "AI insights unavailable", error: (err as Error).message });
   }
 });
 

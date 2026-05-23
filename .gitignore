@@ -1,5 +1,18 @@
 node_modules
-# Keep environment variables out of version control
+dist
+
+# Environment — never commit secrets
 .env
 
+# SQLite database files
+dev.db
+dev.db-journal
+dev.db-wal
+dev.db-shm
+
+# Prisma generated client
 /src/generated/prisma
+
+# Claude Code session files
+.claude/
+client/.claude/

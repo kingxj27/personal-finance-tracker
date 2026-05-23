@@ -4,6 +4,7 @@ import { API_BASE_URL, authHeaders } from "../api";
 import { Layout } from "../components/Layout";
 import { RecentTransactions } from "../components/RecentTransactions";
 import { IncomeExpenseChart } from "../components/IncomeExpenseChart";
+import { generatePDFReport } from "../utils/pdfReport";
 
 /* --- Types --- */
 type CategorySummary = { category: string; spent: number; budget: number };
@@ -15,6 +16,7 @@ type SummaryResponse = {
   netBalance: number;
   categories: CategorySummary[];
 };
+type AIInsight = { title: string; message: string; type: "success" | "warning" | "tip" | "alert"; icon: string };
 
 /* --- UI constants --- */
 const CATEGORY_ICONS: Record<string, string> = {
@@ -161,12 +163,112 @@ function CategoryCard({ cat }: { cat: CategorySummary }) {
   );
 }
 
+/* --- AI Insights Panel --- */
+function AIInsightsPanel({ summary }: { summary: SummaryResponse }) {
+  const [insights, setInsights] = useState<AIInsight[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetched, setFetched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function fetchInsights() {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/api/insights`, { headers: authHeaders(token) });
+      if (!res.ok) throw new Error("Could not load AI insights");
+      const data = await res.json();
+      setInsights(data.insights ?? []);
+      setFetched(true);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const typeColors: Record<string, string> = {
+    success: "bg-green-50 border-green-200 text-green-800",
+    warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
+    tip: "bg-blue-50 border-blue-200 text-blue-800",
+    alert: "bg-red-50 border-red-200 text-red-800",
+  };
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-900 to-green-950 p-6 shadow-lg">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            🤖 AI Financial Advisor
+          </h3>
+          <p className="text-xs text-slate-400 mt-0.5">Powered by Claude AI • personalized for your finances</p>
+        </div>
+        {!fetched && (
+          <button
+            onClick={fetchInsights}
+            disabled={loading}
+            className="px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg hover:from-green-600 hover:to-emerald-600 transition disabled:opacity-60 flex items-center gap-2"
+          >
+            {loading ? (
+              <><span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Analyzing...</>
+            ) : "Get Insights"}
+          </button>
+        )}
+        {fetched && (
+          <button onClick={fetchInsights} disabled={loading} className="text-xs text-slate-400 hover:text-white transition flex items-center gap-1">
+            {loading ? <span className="inline-block w-3 h-3 border-2 border-slate-400 border-t-white rounded-full animate-spin" /> : "↻"} Refresh
+          </button>
+        )}
+      </div>
+
+      {!fetched && !loading && (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-3">🧠</div>
+          <p className="text-slate-300 text-sm font-medium">Click "Get Insights" to analyze your spending</p>
+          <p className="text-slate-500 text-xs mt-1">Claude AI will review your data and give personalized advice</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="text-center py-8">
+          <div className="inline-block w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mb-3" />
+          <p className="text-slate-300 text-sm">Analyzing your financial data...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="p-3 rounded-lg bg-red-900/30 border border-red-500/30 text-red-300 text-sm">
+          {error} — make sure ANTHROPIC_API_KEY is set in the backend .env
+        </div>
+      )}
+
+      {insights.length > 0 && (
+        <div className="grid sm:grid-cols-2 gap-3">
+          {insights.map((insight, i) => (
+            <div key={i} className={`p-4 rounded-xl border ${typeColors[insight.type] ?? typeColors.tip}`}>
+              <div className="flex items-start gap-2">
+                <span className="text-lg">{insight.icon}</span>
+                <div>
+                  <p className="font-semibold text-sm">{insight.title}</p>
+                  <p className="text-xs mt-1 opacity-90 leading-relaxed">{insight.message}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* --- Main Component --- */
 export function DashboardPage() {
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const persona = (localStorage.getItem("persona") ?? "YOUNG_PROFESSIONAL") as "STUDENT" | "YOUNG_PROFESSIONAL" | "INVESTOR";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -223,6 +325,23 @@ export function DashboardPage() {
 
   const savingsPercentForBar = Math.max(0, Math.min(100, Math.round(savingsRate)));
 
+  const PERSONA_BANNERS = {
+    STUDENT: { icon: "🎓", label: "Student Mode", color: "from-blue-50 to-indigo-50 border-blue-200", text: "text-blue-800", tip: "Focus on building your emergency fund first — aim for 1 month of expenses." },
+    YOUNG_PROFESSIONAL: { icon: "💼", label: "Professional Mode", color: "from-green-50 to-emerald-50 border-green-200", text: "text-green-800", tip: "The 50/30/20 rule: 50% needs, 30% wants, 20% savings. Track it here." },
+    INVESTOR: { icon: "📈", label: "Investor Mode", color: "from-purple-50 to-violet-50 border-purple-200", text: "text-purple-800", tip: "Maximize savings rate first. Every ₦ saved today compounds tomorrow." },
+  };
+  const banner = PERSONA_BANNERS[persona];
+
+  async function handleDownloadPDF() {
+    if (!summary) return;
+    setPdfLoading(true);
+    try {
+      await generatePDFReport(summary, persona);
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
   return (
     <Layout>
       {/* Header */}
@@ -236,12 +355,31 @@ export function DashboardPage() {
               Track your spending and achieve your financial goals • {monthLabel}
             </p>
           </div>
-          <button
-            onClick={() => setReloadKey((k) => k + 1)}
-            className="self-start md:self-center rounded-lg border border-green-200 bg-white px-4 py-2.5 font-medium text-green-700 hover:bg-green-50 transition duration-300 flex items-center gap-2"
-          >
-            <span>↻</span> Refresh
-          </button>
+          <div className="flex gap-3 self-start md:self-center">
+            <button
+              onClick={handleDownloadPDF}
+              disabled={pdfLoading || !summary}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 disabled:opacity-50"
+            >
+              {pdfLoading ? <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" /> : "📄"}
+              PDF Report
+            </button>
+            <button
+              onClick={() => setReloadKey((k) => k + 1)}
+              className="rounded-lg border border-green-200 bg-white px-4 py-2.5 font-medium text-green-700 hover:bg-green-50 transition flex items-center gap-2"
+            >
+              <span>↻</span> Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Persona Banner */}
+      <div className={`mb-6 p-4 rounded-xl border bg-gradient-to-r ${banner.color} flex items-center gap-3`}>
+        <span className="text-2xl">{banner.icon}</span>
+        <div>
+          <p className={`text-xs font-bold uppercase tracking-wide ${banner.text}`}>{banner.label}</p>
+          <p className={`text-sm font-medium ${banner.text} opacity-80`}>{banner.tip}</p>
         </div>
       </div>
 
@@ -312,12 +450,7 @@ export function DashboardPage() {
           {/* Charts Row */}
           <div className="grid gap-8 lg:grid-cols-2">
             {/* Income vs Expense Chart */}
-            <div 
-              className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-              style={{
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
-              }}
-            >
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
               <h3 className="mb-6 text-lg font-semibold text-slate-900">Income vs Expenses</h3>
               <div className="bg-white rounded-lg p-4 shadow-inner">
                 <IncomeExpenseChart
@@ -330,48 +463,38 @@ export function DashboardPage() {
               </div>
             </div>
 
-            {/* Insights Card */}
-            <div 
-              className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-              style={{
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
-              }}
-            >
-              <h3 className="text-lg font-semibold text-slate-900 mb-6">Financial Insights</h3>
+            {/* Quick Stats Card */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-lg font-semibold text-slate-900 mb-6">This Month at a Glance</h3>
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm">
-                  <p className="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
-                    Savings Rate
-                  </p>
+                  <p className="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Savings Rate</p>
                   <div className="flex items-end gap-2 mb-3">
                     <p className="text-3xl font-bold text-green-600">
                       {summary.totalIncome > 0 ? `${Math.max(0, Math.round(savingsRate))}%` : "—"}
                     </p>
-                    <p className="text-xs text-slate-600 mb-1 font-medium">of income</p>
+                    <p className="text-xs text-slate-600 mb-1 font-medium">of income saved</p>
                   </div>
                   <div className="h-2.5 rounded-full bg-green-100 overflow-hidden shadow-inner">
-                    <div
-                      className="h-full bg-gradient-to-r from-green-400 to-emerald-600"
-                      style={{ width: `${savingsPercentForBar}%` }}
-                    />
+                    <div className="h-full bg-gradient-to-r from-green-400 to-emerald-600" style={{ width: `${savingsPercentForBar}%` }} />
                   </div>
                 </div>
-
                 <div className="p-4 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 shadow-sm">
-                  <p className="text-sm font-semibold text-slate-900 mb-2">💡 This Month</p>
+                  <p className="text-sm font-semibold text-slate-900 mb-2">💡 Quick Take</p>
                   <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                    {summary.totalExpenses === 0 ? (
-                      "👋 No expenses recorded yet. Start tracking your spending!"
-                    ) : summary.netBalance > 0 ? (
-                      `✨ Excellent! You're ${Math.round((summary.netBalance / Math.max(1, summary.totalIncome)) * 100)}% under budget this month.`
-                    ) : (
-                      `⚠️ You've spent ${Math.round((summary.totalExpenses / Math.max(1, summary.totalIncome)) * 100)}% of your income. Consider adjusting your budget.`
-                    )}
+                    {summary.totalExpenses === 0
+                      ? "👋 No expenses recorded yet. Start tracking your spending!"
+                      : summary.netBalance > 0
+                      ? `✨ Great work! You're saving ${Math.round((summary.netBalance / Math.max(1, summary.totalIncome)) * 100)}% of your income this month.`
+                      : `⚠️ You've spent ${Math.round((summary.totalExpenses / Math.max(1, summary.totalIncome)) * 100)}% of your income. Time to review your budget.`}
                   </p>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* AI Insights Panel */}
+          <AIInsightsPanel summary={summary} />
 
           {/* Spending by Category */}
           {summary.categories && summary.categories.length > 0 && (

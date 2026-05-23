@@ -1,144 +1,242 @@
-import type { ReactNode } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { type ReactNode, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
-type LayoutProps = {
-  children: ReactNode;
+type LayoutProps = { children: ReactNode };
+
+/* Pull initials from the stored email */
+function getInitials() {
+  const email = localStorage.getItem("email") ?? "";
+  return email.length > 0 ? email[0]!.toUpperCase() : "U";
+}
+
+/* Inline SVG icons — no library needed */
+const Icons = {
+  Dashboard: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+      <rect x="3" y="3" width="7" height="8" rx="1.5" />
+      <rect x="14" y="3" width="7" height="5" rx="1.5" />
+      <rect x="14" y="12" width="7" height="9" rx="1.5" />
+      <rect x="3" y="15" width="7" height="6" rx="1.5" />
+    </svg>
+  ),
+  Budgets: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+      <path d="M12 6v6l4 2" />
+    </svg>
+  ),
+  Income: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
+    </svg>
+  ),
+  Expenses: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+      <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+      <polyline points="17 18 23 18 23 12" />
+    </svg>
+  ),
+  Goals: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
+  Profile: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  Logout: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  ),
+  Menu: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-5 h-5">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  ),
+  Close: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-5 h-5">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
 };
 
+const NAV_LINKS = [
+  { to: "/dashboard", label: "Dashboard",  Icon: Icons.Dashboard },
+  { to: "/budgets",   label: "Budgets",    Icon: Icons.Budgets   },
+  { to: "/income",    label: "Income",     Icon: Icons.Income    },
+  { to: "/expenses",  label: "Expenses",   Icon: Icons.Expenses  },
+  { to: "/goals",     label: "Goals",      Icon: Icons.Goals     },
+  { to: "/profile",   label: "Profile",    Icon: Icons.Profile   },
+];
+
 export function Layout({ children }: LayoutProps) {
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const initials = getInitials();
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("persona");
+    navigate("/");
+  }
+
   return (
-    <div className="min-h-screen bg-[#FDFBF6]">
-      <header className="sticky top-0 z-50 bg-[#FFFDF7] shadow-[0_2px_10px_rgba(0,0,0,0.06)] border-b border-[#E8E4D8]">
-        <div className="mx-auto max-w-7xl px-8">
-          <div className="flex h-12 items-center justify-between">
-            {/* Left Section - Logo */}
-            <div className="flex items-center gap-3">
-              <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600">
-                  <span className="text-lg font-bold text-white">💰</span>
+    <div className="min-h-screen bg-[#F5F5F0]">
+      {/* ── Header ── */}
+      <header className="sticky top-0 z-50">
+        {/* Thin green accent stripe */}
+        <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-green-400 to-teal-500" />
+
+        {/* Main navbar */}
+        <div className="bg-[#0D1117] shadow-[0_2px_24px_rgba(0,0,0,0.4)]">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="flex h-[60px] items-center justify-between gap-8">
+
+              {/* ── Brand ── */}
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-3 shrink-0 group"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-green-600 shadow-lg shadow-emerald-900/40 group-hover:shadow-emerald-700/60 transition-shadow duration-300">
+                  <span className="text-sm font-black text-white tracking-tight">₦</span>
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-sm font-semibold text-slate-900">Personal Finance Tracker</h1>
-                  <p className="text-[10px] text-slate-500"></p>
+                  <p className="text-sm font-bold text-white leading-none tracking-tight">
+                    Finance<span className="text-emerald-400">Tracker</span>
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase mt-0.5">
+                    Smart Money
+                  </p>
                 </div>
               </Link>
-            </div>
 
-            {/* Center Section - Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-2 text-xs font-medium transition-all duration-200 rounded-lg ${
-                    isActive
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-emerald-50"
-                  }`
-                }
-              >
-                <span className="text-base">📊</span>
-                Dashboard
-              </NavLink>
-              <NavLink
-                to="/budgets"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-2 text-xs font-medium transition-all duration-200 rounded-lg ${
-                    isActive
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-emerald-50"
-                  }`
-                }
-              >
-                <span className="text-base">💳</span>
-                Budgets
-              </NavLink>
-              <NavLink
-                to="/income"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-2 text-xs font-medium transition-all duration-200 rounded-lg ${
-                    isActive
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-emerald-50"
-                  }`
-                }
-              >
-                <span className="text-base">📈</span>
-                Income
-              </NavLink>
-              <NavLink
-                to="/expenses"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-2 text-xs font-medium transition-all duration-200 rounded-lg ${
-                    isActive
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-emerald-50"
-                  }`
-                }
-              >
-                <span className="text-base">📉</span>
-                Expenses
-              </NavLink>
-              <NavLink
-                to="/goals"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-2 text-xs font-medium transition-all duration-200 rounded-lg ${
-                    isActive
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-emerald-50"
-                  }`
-                }
-              >
-                <span className="text-base">🎯</span>
-                Goals
-              </NavLink>
-              <NavLink
-                to="/profile"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-2 text- font-medium transition-all duration-200 rounded-lg ${
-                    isActive
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-emerald-50"
-                  }`
-                }
-              >
-                <span className="text-base">👤</span>
-                Profile
-              </NavLink>
-            </nav>
+              {/* ── Desktop Nav ── */}
+              <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
+                {NAV_LINKS.map(({ to, label, Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    className={({ isActive }) =>
+                      `relative flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group ${
+                        isActive
+                          ? "text-white bg-white/10"
+                          : "text-slate-400 hover:text-white hover:bg-white/5"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        {/* Active indicator dot */}
+                        {isActive && (
+                          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-400" />
+                        )}
+                        <span className={isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-slate-300 transition-colors"}>
+                          <Icon />
+                        </span>
+                        {label}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </nav>
 
-            {/* Right Section - Actions */}
-            <div className="flex items-center gap-4">
-              {/* Month Selector */}
-              <div className="hidden lg:flex items-center gap-2">
-                <span className="text-xs text-slate-600">📅</span>
-                <select className="text-xs font-medium text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer hover:text-slate-900 transition-colors">
-                  <option>March 2026</option>
-                  <option>February 2026</option>
-                  <option>January 2026</option>
-                </select>
-              </div>
+              {/* ── Right Section ── */}
+              <div className="flex items-center gap-3 shrink-0">
+                {/* Divider */}
+                <div className="hidden md:block h-6 w-px bg-white/10" />
 
-              {/* Notifications */}
-              <button className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all duration-200">
-                <span className="text-lg">🔔</span>
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">3</span>
-              </button>
-
-              {/* User Avatar */}
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-md">
-                  JD
+                {/* User pill */}
+                <div className="hidden md:flex items-center gap-2.5 pl-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-green-700 text-white text-xs font-bold shadow-md shadow-emerald-900/30 ring-2 ring-white/10">
+                    {initials}
+                  </div>
+                  <div className="hidden lg:block">
+                    <p className="text-xs font-semibold text-white leading-none">
+                      {localStorage.getItem("persona") === "STUDENT"
+                        ? "Student"
+                        : localStorage.getItem("persona") === "INVESTOR"
+                        ? "Investor"
+                        : "Professional"}
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Personal Account</p>
+                  </div>
                 </div>
-                <span className="hidden lg:block text-sm font-medium text-emerald-700">Nyong Charles</span>
-              </div>
 
-          
+                {/* Logout button */}
+                <button
+                  onClick={handleLogout}
+                  title="Sign out"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 border border-transparent hover:border-red-400/20"
+                >
+                  <Icons.Logout />
+                  <span className="hidden lg:inline">Sign out</span>
+                </button>
+
+                {/* Mobile hamburger */}
+                <button
+                  onClick={() => setMobileOpen((v) => !v)}
+                  className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+                >
+                  {mobileOpen ? <Icons.Close /> : <Icons.Menu />}
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* ── Mobile Dropdown Menu ── */}
+          {mobileOpen && (
+            <div className="md:hidden border-t border-white/10 bg-[#0D1117] px-4 pb-4 pt-2">
+              <nav className="flex flex-col gap-1">
+                {NAV_LINKS.map(({ to, label, Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
+                        isActive
+                          ? "text-white bg-white/10 border border-white/10"
+                          : "text-slate-400 hover:text-white hover:bg-white/5"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <span className={isActive ? "text-emerald-400" : "text-slate-500"}>
+                          <Icon />
+                        </span>
+                        {label}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition mt-1"
+                >
+                  <Icons.Logout />
+                  Sign out
+                </button>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-8 py-8 bg-transparent">{children}</main>
+
+      {/* ── Page Content ── */}
+      <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
     </div>
   );
 }
-

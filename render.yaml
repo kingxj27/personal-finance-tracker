@@ -1,0 +1,23 @@
+services:
+  # Backend API — deploy on Render
+  - type: web
+    name: finance-tracker-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false          # Set this manually in Render dashboard
+      - key: DATABASE_URL
+        fromDatabase:
+          name: finance-tracker-db
+          property: connectionString
+
+databases:
+  - name: finance-tracker-db
+    plan: free

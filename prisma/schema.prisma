@@ -11,13 +11,21 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserPersona {
+  STUDENT
+  YOUNG_PROFESSIONAL
+  INVESTOR
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String      @id @default(uuid())
+  email     String      @unique
   password  String
-  createdAt DateTime @default(now())
+  persona   UserPersona @default(YOUNG_PROFESSIONAL)
+  createdAt DateTime    @default(now())
 
   budgets   Budget[]
   expenses  Expense[]
