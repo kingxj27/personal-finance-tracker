@@ -3,7 +3,7 @@ import { API_BASE_URL, authHeaders } from "../api";
 import { Layout } from "../components/Layout";
 import { useToast } from "../components/Toast";
 import { PageSkeleton } from "../components/Skeleton";
-import { AnimatedNGN } from "../components/AnimatedNumber";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 /* --- Types --- */
 type Goal = {
@@ -13,11 +13,6 @@ type Goal = {
   deadline: string;
   savedAmount: number;
 };
-
-/* --- Helpers --- */
-function formatNGN(amount: number) {
-  return "₦" + Math.round(Math.max(0, amount)).toLocaleString();
-}
 
 /* --- UI Components --- */
 function StatCard({
@@ -37,7 +32,7 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-xl border ${borderClass} bg-gradient-to-br ${colorClasses} p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+      className={`rounded-xl border ${borderClass} dark:border-slate-700/50 bg-gradient-to-br ${colorClasses} dark:from-[#161B22] dark:to-[#1e293b]/40 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
       style={{
         boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
       }}
@@ -52,14 +47,14 @@ function StatCard({
     >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             {title}
           </p>
-          <p className="mt-3 text-3xl md:text-4xl font-bold text-slate-900">{value}</p>
+          <p className="mt-3 text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">{value}</p>
           {subtitle && <p className="mt-2 text-xs text-slate-500 font-medium">{subtitle}</p>}
         </div>
         {emoji && (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md text-2xl">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white dark:bg-[#161B22] shadow-md text-2xl">
             {emoji}
           </div>
         )}
@@ -75,23 +70,23 @@ function StatusBadge({
 }) {
   const configs = {
     "on-track": {
-      bg: "bg-green-100",
-      text: "text-green-700",
+      bg: "bg-green-100 dark:bg-green-900/30",
+      text: "text-green-700 dark:text-green-400",
       label: "On Track",
     },
     behind: {
-      bg: "bg-yellow-100",
-      text: "text-yellow-700",
+      bg: "bg-yellow-100 dark:bg-yellow-900/30",
+      text: "text-yellow-700 dark:text-yellow-400",
       label: "Behind Schedule",
     },
     completed: {
-      bg: "bg-emerald-100",
-      text: "text-emerald-700",
+      bg: "bg-emerald-100 dark:bg-emerald-900/30",
+      text: "text-emerald-700 dark:text-emerald-400",
       label: "Completed",
     },
     overdue: {
-      bg: "bg-red-100",
-      text: "text-red-700",
+      bg: "bg-red-100 dark:bg-red-900/30",
+      text: "text-red-700 dark:text-red-400",
       label: "Overdue",
     },
   };
@@ -124,6 +119,7 @@ export function GoalsPage() {
   const [contributionAmount, setContributionAmount] = useState<number | "">("");
 
   const token = localStorage.getItem("token");
+  const { format: formatCurrency } = useCurrency();
   const { toast } = useToast();
 
   async function loadGoals() {
@@ -266,10 +262,10 @@ export function GoalsPage() {
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-green-800 to-slate-900">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-green-800 to-slate-900 dark:from-white dark:via-emerald-300 dark:to-white">
               Goals Overview
             </h1>
-            <p className="mt-2 text-slate-600 font-medium">
+            <p className="mt-2 text-slate-600 dark:text-slate-400 font-medium">
               Plan and track your savings targets with clear progress insights
             </p>
           </div>
@@ -277,13 +273,13 @@ export function GoalsPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 border-l-4 border-l-red-500 flex items-start justify-between">
+        <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 border-l-4 border-l-red-500 flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm font-semibold text-red-700">{error}</p>
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400">{error}</p>
           </div>
           <button
             onClick={() => setError(null)}
-            className="ml-3 rounded-lg px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition"
+            className="ml-3 rounded-lg px-3 py-1.5 text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 transition"
           >
             Dismiss
           </button>
@@ -305,7 +301,7 @@ export function GoalsPage() {
             />
             <StatCard
               title="Total Target"
-              value={formatNGN(stats.totalTarget)}
+              value={formatCurrency(stats.totalTarget)}
               subtitle={`${stats.activeGoals.length} active`}
               emoji="💰"
               colorClasses="from-white to-slate-50"
@@ -313,7 +309,7 @@ export function GoalsPage() {
             />
             <StatCard
               title="Total Saved"
-              value={formatNGN(stats.totalSaved)}
+              value={formatCurrency(stats.totalSaved)}
               subtitle={
                 stats.totalTarget > 0
                   ? `${Math.round((stats.totalSaved / stats.totalTarget) * 100)}% of target`
@@ -336,14 +332,14 @@ export function GoalsPage() {
           </div>
 
           <div
-            className="mb-8 rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg"
+            className="mb-8 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg"
             style={{
               boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
             }}
           >
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">Create Goal</h3>
-              <p className="mt-1 text-sm text-slate-600">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Create Goal</h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                 Set a new target and start tracking progress
               </p>
             </div>
@@ -351,19 +347,19 @@ export function GoalsPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">Goal Name</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Goal Name</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Emergency Fund"
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white dark:placeholder-slate-500 px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">Target Amount (₦)</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Target Amount (₦)</label>
                   <input
                     type="number"
                     required
@@ -373,12 +369,12 @@ export function GoalsPage() {
                       setTargetAmount(e.target.value === "" ? "" : Number(e.target.value))
                     }
                     placeholder="Enter target amount"
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white dark:placeholder-slate-500 px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">Current Savings (₦)</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Current Savings (₦)</label>
                   <input
                     type="number"
                     min="0"
@@ -387,17 +383,17 @@ export function GoalsPage() {
                       setSavedAmount(e.target.value === "" ? "" : Number(e.target.value))
                     }
                     placeholder="Enter current savings"
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white dark:placeholder-slate-500 px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">Deadline</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Deadline</label>
                   <input
                     type="date"
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                   />
                 </div>
               </div>
@@ -414,8 +410,8 @@ export function GoalsPage() {
           {activeGoals.length > 0 && (
             <div className="mb-8">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-slate-900">Active Goals</h3>
-                <p className="mt-1 text-sm text-slate-600">Track ongoing targets and add contributions</p>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Active Goals</h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Track ongoing targets and add contributions</p>
               </div>
 
               <div className="space-y-6">
@@ -431,51 +427,51 @@ export function GoalsPage() {
                   return (
                     <div
                       key={goal.id}
-                      className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg"
+                      className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg"
                       style={{
                         boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
                       }}
                     >
-                      <div className="bg-white rounded-lg p-5 shadow-inner">
+                      <div className="bg-white dark:bg-[#161B22] rounded-lg p-5 shadow-inner">
                         <div className="flex flex-col gap-4">
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div className="flex items-center gap-3">
-                              <h4 className="text-lg font-semibold text-slate-900">{goal.name}</h4>
+                              <h4 className="text-lg font-semibold text-slate-900 dark:text-white">{goal.name}</h4>
                               <StatusBadge status={status} />
                             </div>
                           </div>
 
                           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                             <div>
-                              <p className="text-xs text-slate-600 font-medium">Target Amount</p>
-                              <p className="mt-1 text-xl font-bold text-slate-900">
-                                {formatNGN(goal.targetAmount)}
+                              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Target Amount</p>
+                              <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
+                                {formatCurrency(goal.targetAmount)}
                               </p>
                             </div>
 
                             <div>
-                              <p className="text-xs text-slate-600 font-medium">Saved</p>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Saved</p>
                               <p className="mt-1 text-xl font-bold text-green-600">
-                                {formatNGN(goal.savedAmount)}
+                                {formatCurrency(goal.savedAmount)}
                               </p>
                             </div>
 
                             <div>
-                              <p className="text-xs text-slate-600 font-medium">Remaining</p>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Remaining</p>
                               <p className="mt-1 text-xl font-bold text-orange-600">
-                                {formatNGN(remaining)}
+                                {formatCurrency(remaining)}
                               </p>
                             </div>
 
                             <div>
-                              <p className="text-xs text-slate-600 font-medium">Deadline</p>
-                              <p className="mt-1 text-lg font-bold text-slate-900">
+                              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Deadline</p>
+                              <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
                                 {deadlineDate.toLocaleDateString("en-US", {
                                   month: "short",
                                   day: "numeric",
                                 })}
                               </p>
-                              <p className="text-xs text-slate-600">
+                              <p className="text-xs text-slate-600 dark:text-slate-400">
                                 {daysRemaining > 0
                                   ? `${daysRemaining} days left`
                                   : daysRemaining === 0
@@ -487,12 +483,12 @@ export function GoalsPage() {
 
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-slate-700">Progress</span>
-                              <span className="text-sm font-bold text-slate-900">
+                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Progress</span>
+                              <span className="text-sm font-bold text-slate-900 dark:text-white">
                                 {Math.round(percent)}%
                               </span>
                             </div>
-                            <div className="h-3 w-full rounded-full bg-slate-200 overflow-hidden shadow-inner">
+                            <div className="h-3 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shadow-inner">
                               <div
                                 className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-300"
                                 style={{ width: `${Math.min(percent, 100)}%` }}
@@ -512,7 +508,7 @@ export function GoalsPage() {
                                   )
                                 }
                                 placeholder="Amount"
-                                className="flex-1 rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                                className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-[#0D1117] dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                               />
                               <button
                                 onClick={() => {
@@ -529,7 +525,7 @@ export function GoalsPage() {
                                   setContributionGoalId(null);
                                   setContributionAmount("");
                                 }}
-                                className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-900 hover:bg-slate-50"
+                                className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50"
                               >
                                 Cancel
                               </button>
@@ -562,8 +558,8 @@ export function GoalsPage() {
           {completedGoals.length > 0 && (
             <div className="mb-8">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-slate-900">Completed Goals</h3>
-                <p className="mt-1 text-sm text-slate-600">Goals you have already achieved</p>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Completed Goals</h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Goals you have already achieved</p>
               </div>
 
               <div className="space-y-4">
@@ -572,16 +568,16 @@ export function GoalsPage() {
                   return (
                     <div
                       key={goal.id}
-                      className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-5 shadow-lg"
+                      className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 dark:from-emerald-900/20 to-emerald-50 dark:to-emerald-900/10 p-5 shadow-lg"
                       style={{
                         boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
                       }}
                     >
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                          <p className="font-semibold text-slate-900">{goal.name}</p>
-                          <p className="mt-1 text-sm text-green-700 font-medium">
-                            ✓ Goal achieved! {formatNGN(goal.savedAmount)} saved by{" "}
+                          <p className="font-semibold text-slate-900 dark:text-white">{goal.name}</p>
+                          <p className="mt-1 text-sm text-green-700 dark:text-green-400 font-medium">
+                            ✓ Goal achieved! {formatCurrency(goal.savedAmount)} saved by{" "}
                             {deadlineDate.toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
@@ -592,7 +588,7 @@ export function GoalsPage() {
 
                         <button
                           onClick={() => void handleDeleteGoal(goal.id)}
-                          className="rounded-lg border border-green-300 bg-white px-3 py-2 text-sm font-medium text-green-700 hover:bg-green-100"
+                          className="rounded-lg border border-green-300 bg-white dark:bg-[#161B22] px-3 py-2 text-sm font-medium text-green-700 dark:text-green-400 hover:bg-green-100"
                         >
                           Remove
                         </button>
@@ -606,18 +602,18 @@ export function GoalsPage() {
 
           {goals.length === 0 && (
             <div
-              className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-12 text-center shadow-lg"
+              className="rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-[#161B22]/30 p-12 text-center shadow-lg"
               style={{
                 boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
               }}
             >
               <div className="flex justify-center mb-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 shadow-md text-3xl">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 shadow-md text-3xl">
                   🎯
                 </div>
               </div>
-              <p className="font-semibold text-slate-900 text-lg">No goals yet</p>
-              <p className="mt-2 text-slate-600">
+              <p className="font-semibold text-slate-900 dark:text-white text-lg">No goals yet</p>
+              <p className="mt-2 text-slate-600 dark:text-slate-400">
                 Create your first savings goal to start tracking progress
               </p>
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 interface AnimatedNumberProps {
   value: number;
@@ -62,13 +63,22 @@ export function AnimatedNumber({
   );
 }
 
-/* Pre-wired variant for Nigerian Naira */
+/* Currency-aware animated amount — respects the active currency from context */
 export function AnimatedNGN({ value, className }: { value: number; className?: string }) {
+  const { currency, convert } = useCurrency();
+  const convertedTarget = Math.round(Math.max(0, convert(value)));
+
   return (
     <AnimatedNumber
-      value={Math.round(Math.max(0, value))}
-      prefix="₦"
-      formatFn={(v) => v.toLocaleString("en-NG")}
+      value={convertedTarget}
+      prefix={currency.symbol}
+      formatFn={(v) =>
+        currency.code === "NGN"
+          ? v.toLocaleString("en-NG")
+          : v >= 1000
+          ? Math.round(v).toLocaleString()
+          : v.toLocaleString(undefined, { maximumFractionDigits: 2 })
+      }
       className={className}
     />
   );

@@ -13,7 +13,7 @@ import { API_BASE_URL, authHeaders } from "../api";
 import { Layout } from "../components/Layout";
 import { useToast } from "../components/Toast";
 import { PageSkeleton } from "../components/Skeleton";
-import { AnimatedNGN } from "../components/AnimatedNumber";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 /* --- Types --- */
 type Budget = {
@@ -88,7 +88,7 @@ const StatCard = ({
   subtext?: string;
 }) => (
   <div
-    className="rounded-xl border border-slate-200 bg-white p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+    className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
     style={{
       boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
     }}
@@ -104,8 +104,8 @@ const StatCard = ({
     <div className="flex items-start justify-between">
       <div>
         <p className="text-xs text-slate-500">{label}</p>
-        <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
-        {subtext && <p className="mt-1 text-xs text-slate-600">{subtext}</p>}
+        <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
+        {subtext && <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{subtext}</p>}
       </div>
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md text-2xl">
         {icon}
@@ -116,6 +116,7 @@ const StatCard = ({
 
 export function BudgetsPage() {
   const token = localStorage.getItem("token");
+  const { format: formatCurrency } = useCurrency();
   const now = new Date();
   const { toast } = useToast();
 
@@ -275,7 +276,7 @@ export function BudgetsPage() {
     if (overSpendingCategories.length > 0) {
       const worst = overSpendingCategories.reduce((a, b) => (a.excess > b.excess ? a : b));
       insightsList.push(
-        `⚠️ ${worst.category} is over budget by ₦${worst.excess.toLocaleString()}`
+        `⚠️ ${worst.category} is over budget by ${formatCurrency(worst.excess)}`
       );
     }
 
@@ -308,8 +309,8 @@ export function BudgetsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Budgets</h1>
-            <p className="text-slate-600">Plan and track your spending</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Budgets</h1>
+            <p className="text-slate-600 dark:text-slate-400">Plan and track your spending</p>
           </div>
         </div>
 
@@ -318,7 +319,7 @@ export function BudgetsPage() {
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
+            className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
           >
             {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
               <option key={m} value={m}>
@@ -329,7 +330,7 @@ export function BudgetsPage() {
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
+            className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white px-3 py-2 text-sm font-medium text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
           >
             {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
               <option key={y} value={y}>
@@ -337,7 +338,7 @@ export function BudgetsPage() {
               </option>
             ))}
           </select>
-          <div className="text-sm text-slate-600">{monthName}</div>
+          <div className="text-sm text-slate-600 dark:text-slate-400">{monthName}</div>
         </div>
 
         {/* Summary Cards */}
@@ -345,18 +346,18 @@ export function BudgetsPage() {
           <StatCard
             icon="💰"
             label="Total Budget"
-            value={`₦${totalBudget.toLocaleString()}`}
+            value={formatCurrency(totalBudget)}
           />
           <StatCard
             icon="💳"
             label="Total Spent"
-            value={`₦${totalSpent.toLocaleString()}`}
+            value={formatCurrency(totalSpent)}
             subtext={budgets.length > 0 ? `${Math.round(percentageUsed)}% used` : "No budgets"}
           />
           <StatCard
             icon="💵"
             label="Remaining"
-            value={`₦${Math.max(0, totalRemaining).toLocaleString()}`}
+            value={formatCurrency(Math.max(0, totalRemaining))}
             subtext={totalRemaining < 0 ? "Over budget" : "Available to spend"}
           />
           <StatCard
@@ -369,14 +370,14 @@ export function BudgetsPage() {
 
         {/* Overall Progress Bar */}
         {budgets.length > 0 && (
-          <div 
-            className="rounded-xl border border-slate-200 bg-white p-6 shadow-lg"
+          <div
+            className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] p-6 shadow-lg"
             style={{
               boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
             }}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">📊 Overall Budget Progress</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">📊 Overall Budget Progress</h3>
               <span
                 className={`text-xl font-bold ${
                   percentageUsed >= 100
@@ -389,7 +390,7 @@ export function BudgetsPage() {
                 {Math.round(percentageUsed)}%
               </span>
             </div>
-            <div className="h-4 w-full overflow-hidden rounded-full bg-slate-200 shadow-inner">
+            <div className="h-4 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700 shadow-inner">
               <div
                 className={`h-full transition-all ${
                   percentageUsed >= 100
@@ -406,16 +407,16 @@ export function BudgetsPage() {
 
         {/* Insights */}
         {insights.length > 0 && (
-          <div 
-            className="rounded-xl border border-blue-200 bg-blue-50/50 p-6 shadow-lg"
+          <div
+            className="rounded-xl border border-blue-200 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-900/20 p-6 shadow-lg"
             style={{
               boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
             }}
           >
-            <h3 className="mb-3 font-semibold text-blue-900">💡 Insights</h3>
+            <h3 className="mb-3 font-semibold text-blue-900 dark:text-blue-400">💡 Insights</h3>
             <ul className="space-y-2">
               {insights.map((insight, i) => (
-                <li key={i} className="text-sm text-blue-800">
+                <li key={i} className="text-sm text-blue-800 dark:text-blue-400">
                   {insight}
                 </li>
               ))}
@@ -425,22 +426,22 @@ export function BudgetsPage() {
 
         {/* Chart */}
         {chartData.length > 0 && (
-          <div 
-            className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg"
+          <div
+            className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg"
             style={{
               boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
             }}
           >
-            <h3 className="mb-4 text-lg font-semibold text-slate-900">📈 Budget vs Spent</h3>
-            <div className="bg-white rounded-lg p-4 shadow-inner">
+            <h3 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">📈 Budget vs Spent</h3>
+            <div className="bg-white dark:bg-[#161B22] rounded-lg p-4 shadow-inner">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="category" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: number | undefined) => 
-                      value ? `₦${value.toLocaleString()}` : "N/A"
+                    formatter={(value: number | undefined) =>
+                      value ? formatCurrency(value) : "N/A"
                     }
                     contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0" }}
                   />
@@ -454,21 +455,21 @@ export function BudgetsPage() {
         )}
 
         {/* Add Budget Form */}
-        <div 
-          className="rounded-xl border border-slate-200 bg-white p-6 shadow-lg"
+        <div
+          className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] p-6 shadow-lg"
           style={{
             boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
           }}
         >
-          <h3 className="mb-4 text-lg font-semibold text-slate-900">➕ Create New Budget</h3>
+          <h3 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">➕ Create New Budget</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700">Category</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
+                  className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -478,7 +479,7 @@ export function BudgetsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700">Budget Limit (₦)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Budget Limit (₦)</label>
                 <input
                   type="number"
                   required
@@ -486,7 +487,7 @@ export function BudgetsPage() {
                   value={formData.limit}
                   onChange={(e) => setFormData({ ...formData, limit: e.target.value })}
                   placeholder="Enter limit amount"
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
+                  className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white dark:placeholder-slate-500 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
                 />
               </div>
               <div className="flex items-end">
@@ -504,23 +505,23 @@ export function BudgetsPage() {
 
         {/* Budget Cards */}
         <div>
-          <h3 className="mb-6 text-lg font-semibold text-slate-900">💳 Your Budgets</h3>
+          <h3 className="mb-6 text-lg font-semibold text-slate-900 dark:text-white">💳 Your Budgets</h3>
           {loading && <PageSkeleton />}
 
           {!loading && budgets.length === 0 ? (
-            <div 
-              className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-12 text-center shadow-lg"
+            <div
+              className="rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-[#161B22]/30 p-12 text-center shadow-lg"
               style={{
                 boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
               }}
             >
               <div className="flex justify-center mb-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 shadow-md text-3xl">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 shadow-md text-3xl">
                   📋
                 </div>
               </div>
-              <p className="font-semibold text-slate-900">No budgets yet</p>
-              <p className="mt-1 text-sm text-slate-600">Create your first budget to start planning</p>
+              <p className="font-semibold text-slate-900 dark:text-white">No budgets yet</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Create your first budget to start planning</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -533,7 +534,7 @@ export function BudgetsPage() {
                 return (
                   <div
                     key={budget.id}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                    className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                     style={{
                       boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
                     }}
@@ -558,15 +559,15 @@ export function BudgetsPage() {
                           {CATEGORY_ICONS[budget.category]}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900">{budget.category}</p>
-                          <p className="text-xs text-slate-600">Budget: ₦{budget.limit.toLocaleString()}</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{budget.category}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400">Budget: {formatCurrency(budget.limit)}</p>
                         </div>
                       </div>
 
                       <div className="mb-3">
                         <div className="mb-2 flex items-center justify-between">
-                          <span className="text-xs font-medium text-slate-700">
-                            Spent: ₦{spent.toLocaleString()}
+                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                            Spent: {formatCurrency(spent)}
                           </span>
                           <span
                             className={`text-xs font-semibold ${
@@ -580,7 +581,7 @@ export function BudgetsPage() {
                             {Math.round(percentage)}%
                           </span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden shadow-inner">
+                        <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shadow-inner">
                           <div
                             className="h-full rounded-full transition-all"
                             style={{
@@ -596,12 +597,12 @@ export function BudgetsPage() {
                       </div>
 
                       {isOverBudget && (
-                        <p className="text-xs font-medium text-red-600">
-                          ⚠️ Over budget by ₦{(spent - budget.limit).toLocaleString()}
+                        <p className="text-xs font-medium text-red-600 dark:text-red-400">
+                          ⚠️ Over budget by {formatCurrency(spent - budget.limit)}
                         </p>
                       )}
                       {!isOverBudget && (
-                        <p className="text-xs text-green-600">✓ ₦{remaining.toLocaleString()} remaining</p>
+                        <p className="text-xs text-green-600 dark:text-green-400">✓ {formatCurrency(remaining)} remaining</p>
                       )}
                     </div>
 

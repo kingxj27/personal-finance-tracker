@@ -7,6 +7,7 @@ import { IncomeExpenseChart } from "../components/IncomeExpenseChart";
 import { generatePDFReport } from "../utils/pdfReport";
 import { AnimatedNGN, AnimatedPercent } from "../components/AnimatedNumber";
 import { PageSkeleton } from "../components/Skeleton";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 /* --- Types --- */
 type CategorySummary = { category: string; spent: number; budget: number };
@@ -41,11 +42,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   Other: "from-gray-100 to-slate-100",
 };
 
-/* --- Helpers --- */
-function formatNGN(amount: number) {
-  return "₦" + Math.round(Math.max(0, amount)).toLocaleString();
-}
-
 /* --- Stat Card with animated number --- */
 function StatCard({
   title,
@@ -65,16 +61,16 @@ function StatCard({
   valueColor?: string;
 }) {
   return (
-    <div className={`group rounded-xl border ${borderClass} bg-white p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}>
+    <div className={`group rounded-xl border ${borderClass} bg-white dark:bg-[#161B22] p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}>
       <div className="flex items-start justify-between mb-3">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{title}</p>
         {emoji && (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 group-hover:bg-emerald-50 text-xl transition-colors duration-300">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 dark:bg-[#0D1117]/50 group-hover:bg-emerald-50 text-xl transition-colors duration-300">
             {emoji}
           </div>
         )}
       </div>
-      <p className={`text-3xl font-extrabold tabular-nums ${valueColor}`}>
+      <p className={`text-3xl font-extrabold tabular-nums dark:text-white ${valueColor}`}>
         {amount !== undefined && !isPercent && <AnimatedNGN value={amount} />}
         {amount !== undefined && isPercent && <AnimatedPercent value={amount} />}
       </p>
@@ -84,6 +80,7 @@ function StatCard({
 }
 
 function CategoryCard({ cat, index }: { cat: CategorySummary; index: number }) {
+  const { format: formatCurrency } = useCurrency();
   const [barWidth, setBarWidth] = useState(0);
   const percent = cat.budget > 0 ? Math.min(100, (cat.spent / cat.budget) * 100) : 0;
   const isOverBudget = cat.budget > 0 && cat.spent > cat.budget;
@@ -100,14 +97,14 @@ function CategoryCard({ cat, index }: { cat: CategorySummary; index: number }) {
   }, [percent, index]);
 
   return (
-    <div className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+    <div className="group rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] p-5 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-center gap-3 mb-4">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${CATEGORY_COLORS[cat.category] || "from-gray-100 to-slate-100"} text-lg`}>
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${CATEGORY_COLORS[cat.category] || "from-gray-100 to-slate-100"} dark:opacity-80 text-lg`}>
           {CATEGORY_ICONS[cat.category] || "📦"}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-800">{cat.category}</p>
-          {cat.budget > 0 && <p className="text-xs text-slate-400 mt-0.5">Budget: {formatNGN(cat.budget)}</p>}
+          <p className="font-bold text-slate-800 dark:text-slate-200">{cat.category}</p>
+          {cat.budget > 0 && <p className="text-xs text-slate-400 mt-0.5">Budget: {formatCurrency(cat.budget)}</p>}
         </div>
         <span className={`text-xs font-bold px-2 py-1 rounded-lg ${
           isOverBudget ? "bg-red-50 text-red-600" : isNearLimit ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
@@ -116,11 +113,11 @@ function CategoryCard({ cat, index }: { cat: CategorySummary; index: number }) {
         </span>
       </div>
 
-      <p className="text-2xl font-extrabold text-slate-900 tabular-nums mb-3">
+      <p className="text-2xl font-extrabold text-slate-900 dark:text-white tabular-nums mb-3">
         <AnimatedNGN value={cat.spent} />
       </p>
 
-      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+      <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700/50 overflow-hidden">
         <div
           className={`h-full rounded-full bg-gradient-to-r ${progressColor} transition-all duration-700 ease-out`}
           style={{ width: `${barWidth}%` }}
@@ -129,7 +126,7 @@ function CategoryCard({ cat, index }: { cat: CategorySummary; index: number }) {
 
       {isOverBudget && (
         <p className="mt-2.5 text-xs font-semibold text-red-500 flex items-center gap-1">
-          ↑ Over by {formatNGN(cat.spent - cat.budget)}
+          ↑ Over by {formatCurrency(cat.spent - cat.budget)}
         </p>
       )}
     </div>
@@ -242,6 +239,7 @@ export function DashboardPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [pdfLoading, setPdfLoading] = useState(false);
   const persona = (localStorage.getItem("persona") ?? "YOUNG_PROFESSIONAL") as "STUDENT" | "YOUNG_PROFESSIONAL" | "INVESTOR";
+  const { format: formatCurrency } = useCurrency();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -321,10 +319,10 @@ export function DashboardPage() {
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-green-800 to-slate-900">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-green-800 to-slate-900 dark:from-white dark:via-emerald-300 dark:to-white">
               Financial Overview
             </h1>
-            <p className="mt-2 text-slate-600 font-medium">
+            <p className="mt-2 text-slate-600 dark:text-slate-400 font-medium">
               Track your spending and achieve your financial goals • {monthLabel}
             </p>
           </div>
@@ -332,14 +330,14 @@ export function DashboardPage() {
             <button
               onClick={handleDownloadPDF}
               disabled={pdfLoading || !summary}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 disabled:opacity-50"
+              className="rounded-lg border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] px-4 py-2.5 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition flex items-center gap-2 disabled:opacity-50"
             >
               {pdfLoading ? <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" /> : "📄"}
               PDF Report
             </button>
             <button
               onClick={() => setReloadKey((k) => k + 1)}
-              className="rounded-lg border border-green-200 bg-white px-4 py-2.5 font-medium text-green-700 hover:bg-green-50 transition flex items-center gap-2"
+              className="rounded-lg border border-green-200 bg-white dark:bg-[#161B22] px-4 py-2.5 font-medium text-green-700 hover:bg-green-50 transition flex items-center gap-2"
             >
               <span>↻</span> Refresh
             </button>
@@ -358,13 +356,13 @@ export function DashboardPage() {
 
       {/* Error State */}
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 border-l-4 border-l-red-500 flex items-start justify-between">
+        <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 border-l-4 border-l-red-500 flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm font-semibold text-red-700">{error}</p>
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400">{error}</p>
           </div>
           <button
             onClick={() => setReloadKey((k) => k + 1)}
-            className="ml-3 rounded-lg px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition"
+            className="ml-3 rounded-lg px-3 py-1.5 text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 transition"
           >
             Retry
           </button>
@@ -414,9 +412,9 @@ export function DashboardPage() {
           {/* Charts Row */}
           <div className="grid gap-8 lg:grid-cols-2">
             {/* Income vs Expense Chart */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-              <h3 className="mb-6 text-lg font-semibold text-slate-900">Income vs Expenses</h3>
-              <div className="bg-white rounded-lg p-4 shadow-inner">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="mb-6 text-lg font-semibold text-slate-900 dark:text-white">Income vs Expenses</h3>
+              <div className="bg-white dark:bg-[#161B22] rounded-lg p-4 shadow-inner">
                 <IncomeExpenseChart
                   month={summary.month}
                   year={summary.year}
@@ -428,24 +426,24 @@ export function DashboardPage() {
             </div>
 
             {/* Quick Stats Card */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-              <h3 className="text-lg font-semibold text-slate-900 mb-6">This Month at a Glance</h3>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">This Month at a Glance</h3>
               <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm">
-                  <p className="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Savings Rate</p>
+                <div className="p-4 rounded-lg bg-white dark:bg-[#161B22] border border-slate-200 dark:border-slate-700/50 shadow-sm">
+                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wide">Savings Rate</p>
                   <div className="flex items-end gap-2 mb-3">
                     <p className="text-3xl font-bold text-green-600">
                       {summary.totalIncome > 0 ? `${Math.max(0, Math.round(savingsRate))}%` : "—"}
                     </p>
-                    <p className="text-xs text-slate-600 mb-1 font-medium">of income saved</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-1 font-medium">of income saved</p>
                   </div>
-                  <div className="h-2.5 rounded-full bg-green-100 overflow-hidden shadow-inner">
+                  <div className="h-2.5 rounded-full bg-green-100 dark:bg-emerald-900/20 overflow-hidden shadow-inner">
                     <div className="h-full bg-gradient-to-r from-green-400 to-emerald-600" style={{ width: `${savingsPercentForBar}%` }} />
                   </div>
                 </div>
-                <div className="p-4 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 shadow-sm">
-                  <p className="text-sm font-semibold text-slate-900 mb-2">💡 Quick Take</p>
-                  <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                <div className="p-4 rounded-lg bg-gradient-to-br from-green-50 dark:from-emerald-900/20 to-emerald-50 dark:to-emerald-900/10 border border-green-200 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white mb-2">💡 Quick Take</p>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
                     {summary.totalExpenses === 0
                       ? "👋 No expenses recorded yet. Start tracking your spending!"
                       : summary.netBalance > 0
@@ -464,8 +462,8 @@ export function DashboardPage() {
           {summary.categories && summary.categories.length > 0 && (
             <div>
               <div className="mb-6">
-                <h3 className="text-2xl font-semibold text-slate-900">Spending by Category</h3>
-                <p className="mt-1 text-sm text-slate-600">Monitor your expenses across different categories</p>
+                <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">Spending by Category</h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Monitor your expenses across different categories</p>
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {summary.categories.map((cat, i) => (
@@ -476,51 +474,51 @@ export function DashboardPage() {
           )}
 
           {/* Recent Transactions */}
-          <div 
-            className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg"
+          <div
+            className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg"
             style={{
               boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
             }}
           >
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-slate-900">Recent Transactions</h3>
-              <p className="mt-1 text-sm text-slate-600">Your latest income and expenses</p>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Transactions</h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Your latest income and expenses</p>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-inner">
+            <div className="bg-white dark:bg-[#161B22] rounded-lg p-4 shadow-inner">
               <RecentTransactions />
             </div>
           </div>
 
           {/* Budgeting Tips */}
-          <div 
-            className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg"
+          <div
+            className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg"
             style={{
               boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
             }}
           >
-            <p className="mb-6 text-xl font-semibold text-slate-900">💡 Smart Budgeting Tips</p>
+            <p className="mb-6 text-xl font-semibold text-slate-900 dark:text-white">💡 Smart Budgeting Tips</p>
             <div className="grid gap-6 md:grid-cols-2">
-              <div className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                <p className="font-semibold text-slate-900 text-sm mb-2">📊 Monitor Categories</p>
-                <p className="text-xs text-slate-600">
+              <div className="p-4 rounded-lg bg-white dark:bg-[#161B22] border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <p className="font-semibold text-slate-900 dark:text-white text-sm mb-2">📊 Monitor Categories</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Track where spending is close to budget limits to stay in control
                 </p>
               </div>
-              <div className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                <p className="font-semibold text-slate-900 text-sm mb-2">🎯 Set Goals</p>
-                <p className="text-xs text-slate-600">
+              <div className="p-4 rounded-lg bg-white dark:bg-[#161B22] border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <p className="font-semibold text-slate-900 dark:text-white text-sm mb-2">🎯 Set Goals</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Create realistic savings targets based on your monthly income
                 </p>
               </div>
-              <div className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                <p className="font-semibold text-slate-900 text-sm mb-2">📈 Log Daily</p>
-                <p className="text-xs text-slate-600">
+              <div className="p-4 rounded-lg bg-white dark:bg-[#161B22] border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <p className="font-semibold text-slate-900 dark:text-white text-sm mb-2">📈 Log Daily</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Record expenses daily to maintain accurate tracking and visibility
                 </p>
               </div>
-              <div className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                <p className="font-semibold text-slate-900 text-sm mb-2">🔍 Analyze Patterns</p>
-                <p className="text-xs text-slate-600">
+              <div className="p-4 rounded-lg bg-white dark:bg-[#161B22] border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <p className="font-semibold text-slate-900 dark:text-white text-sm mb-2">🔍 Analyze Patterns</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Review spending trends to identify areas for better savings
                 </p>
               </div>
@@ -531,17 +529,17 @@ export function DashboardPage() {
 
       {/* Empty State */}
       {!loading && !summary && !error && (
-        <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-12 text-center shadow-lg"
+        <div className="rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-[#161B22]/30 p-12 text-center shadow-lg"
              style={{
                boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
              }}>
           <div className="flex justify-center mb-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 shadow-md text-3xl">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 shadow-md text-3xl">
               📊
             </div>
           </div>
-          <p className="font-semibold text-slate-900 text-lg">No data available</p>
-          <p className="mt-2 text-slate-600">Start tracking your finances to see insights</p>
+          <p className="font-semibold text-slate-900 dark:text-white text-lg">No data available</p>
+          <p className="mt-2 text-slate-600 dark:text-slate-400">Start tracking your finances to see insights</p>
         </div>
       )}
     </Layout>

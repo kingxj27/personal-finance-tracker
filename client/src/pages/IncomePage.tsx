@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { API_BASE_URL, authHeaders } from "../api";
 import { Layout } from "../components/Layout";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 type IncomeEntry = {
   id: string;
@@ -47,10 +48,6 @@ const SOURCE_COLORS_LIGHT: Record<string, string> = {
   Other: "from-gray-50 to-slate-100",
 };
 
-function formatNGN(amount: number) {
-  return "₦" + Math.round(Math.max(0, amount)).toLocaleString();
-}
-
 function StatCard({
   title,
   value,
@@ -68,7 +65,7 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-xl border ${borderClass} bg-gradient-to-br ${colorClasses} p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+      className={`rounded-xl border ${borderClass} dark:border-slate-700/50 bg-gradient-to-br ${colorClasses} dark:from-[#161B22] dark:to-[#1e293b]/40 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
       style={{
         boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
       }}
@@ -83,14 +80,14 @@ function StatCard({
     >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             {title}
           </p>
-          <p className="mt-3 text-3xl md:text-4xl font-bold text-slate-900">{value}</p>
+          <p className="mt-3 text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">{value}</p>
           {subtitle && <p className="mt-2 text-xs text-slate-500 font-medium">{subtitle}</p>}
         </div>
         {emoji && (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md text-2xl">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white dark:bg-[#161B22] shadow-md text-2xl">
             {emoji}
           </div>
         )}
@@ -115,17 +112,17 @@ function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div
-        className="mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl"
+        className="mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] shadow-xl"
         style={{
           boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
         }}
       >
-        <div className="sticky top-0 border-b border-slate-200 bg-white px-6 py-4">
+        <div className="sticky top-0 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] px-6 py-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
             <button
               onClick={onClose}
-              className="rounded-full p-1 hover:bg-slate-100"
+              className="rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
               aria-label="Close modal"
             >
               ✕
@@ -159,6 +156,7 @@ export function IncomePage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const token = localStorage.getItem("token");
+  const { format: formatCurrency } = useCurrency();
   const { toast } = useToast();
 
   async function loadIncome() {
@@ -336,10 +334,10 @@ export function IncomePage() {
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-green-800 to-slate-900">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-green-800 to-slate-900 dark:from-white dark:via-emerald-300 dark:to-white">
               Income Overview
             </h1>
-            <p className="mt-2 text-slate-600 font-medium">
+            <p className="mt-2 text-slate-600 dark:text-slate-400 font-medium">
               Track all your income sources and analyze earnings over time
             </p>
           </div>
@@ -349,7 +347,7 @@ export function IncomePage() {
               resetForm();
               setIsModalOpen(true);
             }}
-            className="self-start md:self-center rounded-lg border border-green-200 bg-white px-4 py-2.5 font-medium text-green-700 hover:bg-green-50 transition duration-300 flex items-center gap-2"
+            className="self-start md:self-center rounded-lg border border-green-200 bg-white dark:bg-[#161B22] px-4 py-2.5 font-medium text-green-700 hover:bg-green-50 transition duration-300 flex items-center gap-2"
           >
             <span>＋</span> Add Income
           </button>
@@ -357,13 +355,13 @@ export function IncomePage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 border-l-4 border-l-red-500 flex items-start justify-between">
+        <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 border-l-4 border-l-red-500 flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm font-semibold text-red-700">{error}</p>
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400">{error}</p>
           </div>
           <button
             onClick={() => setError(null)}
-            className="ml-3 rounded-lg px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition"
+            className="ml-3 rounded-lg px-3 py-1.5 text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 transition"
           >
             Dismiss
           </button>
@@ -377,7 +375,7 @@ export function IncomePage() {
           <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Total Income"
-              value={formatNGN(stats.total)}
+              value={formatCurrency(stats.total)}
               subtitle={`${stats.count} entries`}
               emoji="💰"
               colorClasses="from-white to-slate-50"
@@ -393,7 +391,7 @@ export function IncomePage() {
             />
             <StatCard
               title="Largest Entry"
-              value={stats.largest ? formatNGN(stats.largest.amount) : "—"}
+              value={stats.largest ? formatCurrency(stats.largest.amount) : "—"}
               subtitle={stats.largest ? stats.largest.source : "No data"}
               emoji="🏆"
               colorClasses="from-white to-slate-50"
@@ -401,7 +399,7 @@ export function IncomePage() {
             />
             <StatCard
               title="Average"
-              value={stats.count > 0 ? formatNGN(stats.total / stats.count) : "—"}
+              value={stats.count > 0 ? formatCurrency(stats.total / stats.count) : "—"}
               subtitle="Per entry"
               emoji="📈"
               colorClasses="from-white to-slate-50"
@@ -410,23 +408,23 @@ export function IncomePage() {
           </div>
 
           <div
-            className="mb-8 rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg"
+            className="mb-8 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg"
             style={{
               boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
             }}
           >
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">Filter Income</h3>
-              <p className="mt-1 text-sm text-slate-600">Narrow down your income records</p>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Filter Income</h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Narrow down your income records</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Month</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Month</label>
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                 >
                   {months.map((month) => (
                     <option key={month.value} value={month.value}>
@@ -437,11 +435,11 @@ export function IncomePage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Year</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Year</label>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                 >
                   {years.map((year) => (
                     <option key={year} value={year}>
@@ -452,11 +450,11 @@ export function IncomePage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Source</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Source</label>
                 <select
                   value={selectedSource}
                   onChange={(e) => setSelectedSource(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                 >
                   <option value="">All Sources</option>
                   {INCOME_SOURCES.map((source) => (
@@ -468,13 +466,13 @@ export function IncomePage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Search</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Search</label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by title..."
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0D1117] dark:text-white dark:placeholder-slate-500 px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                 />
               </div>
             </div>
@@ -483,13 +481,13 @@ export function IncomePage() {
           {filteredIncome.length > 0 && (
             <div className="mb-8 grid gap-8 lg:grid-cols-2">
               <div
-                className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
                 style={{
                   boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
                 }}
               >
-                <h3 className="mb-6 text-lg font-semibold text-slate-900">Income by Source</h3>
-                <div className="bg-white rounded-lg p-4 shadow-inner">
+                <h3 className="mb-6 text-lg font-semibold text-slate-900 dark:text-white">Income by Source</h3>
+                <div className="bg-white dark:bg-[#161B22] rounded-lg p-4 shadow-inner">
                   {incomeBySourceData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
@@ -498,7 +496,7 @@ export function IncomePage() {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, value }) => `${name}: ${formatNGN(value)}`}
+                          label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
                           outerRadius={100}
                           dataKey="value"
                         >
@@ -509,7 +507,7 @@ export function IncomePage() {
                             />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value) => formatNGN(value as number)} />
+                        <Tooltip formatter={(value) => formatCurrency(value as number)} />
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
@@ -519,19 +517,19 @@ export function IncomePage() {
               </div>
 
               <div
-                className="rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
                 style={{
                   boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
                 }}
               >
-                <h3 className="mb-6 text-lg font-semibold text-slate-900">Monthly Trend</h3>
-                <div className="bg-white rounded-lg p-4 shadow-inner">
+                <h3 className="mb-6 text-lg font-semibold text-slate-900 dark:text-white">Monthly Trend</h3>
+                <div className="bg-white dark:bg-[#161B22] rounded-lg p-4 shadow-inner">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={monthlyTrendData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip formatter={(value) => formatNGN(value as number)} />
+                      <Tooltip formatter={(value) => formatCurrency(value as number)} />
                       <Bar dataKey="amount" fill="#10b981" radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -541,22 +539,22 @@ export function IncomePage() {
           )}
 
           <div
-            className="mb-8 rounded-xl border border-slate-200 bg-slate-50/50 p-6 shadow-lg"
+            className="mb-8 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#161B22]/50 p-6 shadow-lg"
             style={{
               boxShadow: "0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)",
             }}
           >
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-slate-900">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                 {filteredIncome.length === 0 ? "No income entries" : `${filteredIncome.length} income entries`}
               </h3>
-              <p className="mt-1 text-sm text-slate-600">Your recorded income for this period</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Your recorded income for this period</p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-inner overflow-hidden">
+            <div className="bg-white dark:bg-[#161B22] rounded-lg shadow-inner overflow-hidden">
               {filteredIncome.length === 0 ? (
                 <div className="px-6 py-8 text-center">
-                  <p className="text-lg font-medium text-slate-900">No income entries found</p>
+                  <p className="text-lg font-medium text-slate-900 dark:text-white">No income entries found</p>
                   <p className="mt-1 text-sm text-slate-500">
                     {incomeEntries.length === 0
                       ? "Start tracking your income by clicking the Add Income button."
@@ -564,16 +562,16 @@ export function IncomePage() {
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-200">
+                <div className="divide-y divide-slate-200 dark:divide-slate-700/50">
                   {filteredIncome.map((entry) => (
                     <div
                       key={entry.id}
                       className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-gradient-to-r ${
                         SOURCE_COLORS_LIGHT[entry.source] || "from-gray-50 to-gray-100"
-                      } px-6 py-4 transition-all duration-300 hover:bg-white`}
+                      } dark:from-slate-800/30 dark:to-slate-800/10 px-6 py-4 transition-all duration-300 hover:bg-white dark:hover:bg-slate-800/50`}
                     >
                       <div className="flex-1">
-                        <p className="font-medium text-slate-900">{entry.title}</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{entry.title}</p>
                         <p className="mt-1 text-xs text-slate-500">
                           {entry.source} • {new Date(entry.date).toLocaleDateString()}
                           {entry.notes && ` • ${entry.notes}`}
@@ -581,19 +579,19 @@ export function IncomePage() {
                       </div>
 
                       <div className="md:ml-4 text-left md:text-right">
-                        <p className="text-lg font-bold text-emerald-600">{formatNGN(entry.amount)}</p>
+                        <p className="text-lg font-bold text-emerald-600">{formatCurrency(entry.amount)}</p>
                       </div>
 
                       <div className="md:ml-4 flex gap-2">
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200"
+                          className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => void handleDelete(entry.id)}
-                          className="rounded-lg px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
+                          className="rounded-lg px-3 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30"
                         >
                           Delete
                         </button>
@@ -617,20 +615,20 @@ export function IncomePage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-900">Title *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-white">Title *</label>
             <input
               type="text"
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g. Monthly Salary"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-[#0D1117] dark:text-white dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-900">Amount (₦) *</label>
+              <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-white">Amount (₦) *</label>
               <input
                 type="number"
                 required
@@ -638,18 +636,18 @@ export function IncomePage() {
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="0"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-[#0D1117] dark:text-white dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-900">Source *</label>
+              <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-white">Source *</label>
               <select
                 value={formData.source}
                 onChange={(e) =>
                   setFormData({ ...formData, source: e.target.value as typeof formData.source })
                 }
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-[#0D1117] dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
               >
                 {INCOME_SOURCES.map((source) => (
                   <option key={source} value={source}>
@@ -661,24 +659,24 @@ export function IncomePage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-900">Date *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-white">Date *</label>
             <input
               type="date"
               required
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-[#0D1117] dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-900">Notes (Optional)</label>
+            <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-white">Notes (Optional)</label>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Add any additional notes..."
               rows={3}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-[#0D1117] dark:text-white dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
             />
           </div>
 
@@ -689,7 +687,7 @@ export function IncomePage() {
                 setIsModalOpen(false);
                 resetForm();
               }}
-              className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
+              className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700/50 px-4 py-2 text-sm font-medium text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50"
             >
               Cancel
             </button>
