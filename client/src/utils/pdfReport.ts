@@ -100,13 +100,7 @@ export async function generatePDFReport(
     headStyles: { fillColor: primaryGreen, textColor: [255, 255, 255], fontStyle: "bold" },
     alternateRowStyles: { fillColor: lightGray },
     columnStyles: {
-      4: {
-        fontStyle: "bold",
-        textColor: (cell: any) => {
-          const v = cell.raw as string;
-          return v === "Over budget" ? [220, 38, 38] : v === "Near limit" ? [202, 138, 4] : [22, 163, 74];
-        },
-      },
+      4: { fontStyle: "bold" },
     },
   });
 

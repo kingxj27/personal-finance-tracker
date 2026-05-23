@@ -164,7 +164,7 @@ function CategoryCard({ cat }: { cat: CategorySummary }) {
 }
 
 /* --- AI Insights Panel --- */
-function AIInsightsPanel({ summary }: { summary: SummaryResponse }) {
+function AIInsightsPanel(_props: { summary: SummaryResponse }) {
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);

@@ -25,11 +25,6 @@ type Expense = {
   recurring?: boolean;
 };
 
-type CategoryStats = {
-  category: string;
-  spent: number;
-  percentage: number;
-};
 
 const CATEGORIES = [
   "Food",
@@ -683,7 +678,7 @@ export function ExpensesPage() {
                         cx="50%"
                         cy="50%"
                         outerRadius={100}
-                        label={({ category, percentage }) => `${category} ${percentage.toFixed(1)}%`}
+                        label={(props: any) => `${props.category} ${(props.percentage as number).toFixed(1)}%`}
                       >
                         {categoryStats.map((entry, index) => (
                           <Cell
@@ -692,7 +687,7 @@ export function ExpensesPage() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => formatNGN(value)} />
+                      <Tooltip formatter={(value) => formatNGN(value as number)} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -717,7 +712,7 @@ export function ExpensesPage() {
                         height={80}
                       />
                       <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip formatter={(value: number) => formatNGN(value)} />
+                      <Tooltip formatter={(value) => formatNGN(value as number)} />
                       <Line
                         type="monotone"
                         dataKey="total"

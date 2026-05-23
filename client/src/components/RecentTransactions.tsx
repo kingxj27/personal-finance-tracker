@@ -56,7 +56,7 @@ export function RecentTransactions() {
             description: exp.description || "",
           }))
           .sort(
-            (a, b) =>
+            (a: Transaction, b: Transaction) =>
               new Date(b.date).getTime() - new Date(a.date).getTime()
           )
           .slice(0, 10); // Get last 10

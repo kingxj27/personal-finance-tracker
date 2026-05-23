@@ -146,7 +146,7 @@ export function IncomePage() {
   const [formData, setFormData] = useState({
     title: "",
     amount: "" as string | number,
-    source: "Salary" as const,
+    source: "Salary" as IncomeEntry["source"],
     date: new Date().toISOString().slice(0, 10),
     notes: "",
   });

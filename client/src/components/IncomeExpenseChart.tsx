@@ -8,7 +8,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
 
 interface ChartDataPoint {
@@ -93,7 +92,7 @@ export function IncomeExpenseChart({
               style={{ fontSize: "12px" }}
             />
             <Tooltip
-              formatter={(value: number) => formatNGN(value)}
+              formatter={(value) => formatNGN(value as number)}
               contentStyle={{
                 backgroundColor: "#fff",
                 border: "1px solid #e5e7eb",
