@@ -985,6 +985,10 @@ Respond with ONLY the JSON array, no other text.`;
   }
 });
 
+app.get("/", (_req: Request, res: Response) => {
+  res.json({ name: "FinanceTracker API", status: "running", version: "1.0.0" });
+});
+
 app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
