@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1280" />
+<title>FinanceTracker — Thumbnail</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px;
+    height: 800px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F5F5F0;
+  }
+
+  /* ── HEADER ── */
+  .header-accent { height: 3px; background: linear-gradient(90deg, #10b981, #34d399, #14b8a6); }
+  .header {
+    background: #0D1117;
+    padding: 0 32px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-icon {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; color: white;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+  }
+  .brand-text { font-size: 14px; font-weight: 700; color: white; }
+  .brand-text span { color: #34d399; }
+  .brand-sub { font-size: 9px; color: #4b5563; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 1px; }
+  .nav { display: flex; gap: 4px; }
+  .nav-item {
+    padding: 6px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 500; color: #6b7280;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-item.active { background: rgba(255,255,255,0.1); color: white; }
+  .nav-item.active .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: #34d399; }
+  .user-area { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #065f46);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white;
+    box-shadow: 0 2px 8px rgba(16,185,129,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  /* ── MAIN ── */
+  .main { padding: 20px 32px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* Page title row */
+  .title-row { display: flex; align-items: center; justify-content: space-between; }
+  .page-title { font-size: 28px; font-weight: 800; color: transparent;
+    background: linear-gradient(135deg, #0f172a, #065f46, #0f172a);
+    -webkit-background-clip: text; background-clip: text; }
+  .page-sub { font-size: 12px; color: #64748b; margin-top: 3px; }
+  .btn-row { display: flex; gap: 8px; }
+  .btn {
+    padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    border: 1px solid #e2e8f0; background: white; color: #374151;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: linear-gradient(135deg, #10b981, #059669); color: white; border-color: transparent; }
+
+  /* Persona banner */
+  .persona-banner {
+    padding: 10px 16px; border-radius: 12px;
+    background: linear-gradient(90deg, #f0fdf4, #ecfdf5);
+    border: 1px solid #bbf7d0;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px;
+  }
+  .persona-icon { font-size: 18px; }
+  .persona-label { font-weight: 700; color: #166534; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .persona-tip { color: #15803d; margin-top: 1px; }
+
+  /* Stat cards */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat-card {
+    background: white; border: 1px solid #e2e8f0;
+    border-radius: 14px; padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .stat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; }
+  .stat-value { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 8px; }
+  .stat-sub { font-size: 10px; color: #94a3b8; margin-top: 4px; font-weight: 500; }
+  .stat-emoji {
+    width: 36px; height: 36px; border-radius: 50%; background: #f8fafc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; float: right; margin-top: -4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  /* Bottom row */
+  .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Chart card */
+  .chart-card {
+    background: white; border: 1px solid #e2e8f0;
+    border-radius: 14px; padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .card-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 14px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; }
+  .bar-group { display: flex; gap: 3px; align-items: flex-end; flex: 1; }
+  .bar { border-radius: 4px 4px 0 0; flex: 1; }
+  .bar-income { background: linear-gradient(180deg, #34d399, #10b981); }
+  .bar-expense { background: linear-gradient(180deg, #fca5a5, #ef4444); }
+  .bar-labels { display: flex; justify-content: space-around; margin-top: 6px; }
+  .bar-label { font-size: 9px; color: #94a3b8; font-weight: 600; }
+  .chart-legend { display: flex; gap: 14px; margin-top: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #64748b; font-weight: 500; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* AI card */
+  .ai-card {
+    background: linear-gradient(135deg, #0D1117, #0a2416);
+    border-radius: 14px; padding: 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .ai-title { font-size: 13px; font-weight: 700; color: white; margin-bottom: 4px; }
+  .ai-sub { font-size: 10px; color: #4b5563; margin-bottom: 12px; }
+  .ai-insights { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .insight {
+    padding: 10px 12px; border-radius: 10px; border: 1px solid;
+  }
+  .insight.success { background: #f0fdf4; border-color: #bbf7d0; }
+  .insight.warning { background: #fffbeb; border-color: #fde68a; }
+  .insight.tip { background: #eff6ff; border-color: #bfdbfe; }
+  .insight.alert { background: #fef2f2; border-color: #fecaca; }
+  .insight-icon { font-size: 14px; margin-bottom: 4px; }
+  .insight-title { font-size: 10px; font-weight: 700; color: #1e293b; }
+  .insight-msg { font-size: 9px; color: #475569; margin-top: 2px; line-height: 1.4; }
+
+  /* Watermark badge */
+  .badge {
+    position: absolute; bottom: 20px; right: 32px;
+    background: #0D1117; color: white;
+    padding: 8px 14px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; animation: pulse 2s infinite; }
+
+  .wrap { position: relative; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Header -->
+  <div class="header-accent"></div>
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">₦</div>
+      <div>
+        <div class="brand-text">Finance<span>Tracker</span></div>
+        <div class="brand-sub">Smart Money</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item active"><span class="nav-dot"></span> Dashboard</div>
+      <div class="nav-item">Budgets</div>
+      <div class="nav-item">Income</div>
+      <div class="nav-item">Expenses</div>
+      <div class="nav-item">Goals</div>
+    </div>
+    <div class="user-area">
+      <div class="avatar">K</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Title row -->
+    <div class="title-row">
+      <div>
+        <div class="page-title">Financial Overview</div>
+        <div class="page-sub">Track your spending and achieve your financial goals • May 2026</div>
+      </div>
+      <div class="btn-row">
+        <div class="btn">📄 PDF Report</div>
+        <div class="btn btn-primary">↻ Refresh</div>
+      </div>
+    </div>
+
+    <!-- Persona banner -->
+    <div class="persona-banner">
+      <div class="persona-icon">💼</div>
+      <div>
+        <div class="persona-label">Professional Mode</div>
+        <div class="persona-tip">The 50/30/20 rule: 50% needs, 30% wants, 20% savings. Track it here.</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-emoji">💰</div>
+        <div class="stat-label">Total Income</div>
+        <div class="stat-value">₦395,000</div>
+        <div class="stat-sub">May</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-emoji">💳</div>
+        <div class="stat-label">Total Expenses</div>
+        <div class="stat-value">₦105,500</div>
+        <div class="stat-sub">27% of income</div>
+      </div>
+      <div class="stat-card" style="border-color:#bbf7d0">
+        <div class="stat-emoji">📈</div>
+        <div class="stat-label">Net Balance</div>
+        <div class="stat-value" style="color:#059669">₦289,500</div>
+        <div class="stat-sub">You're in good shape!</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-emoji">🎯</div>
+        <div class="stat-label">Savings Rate</div>
+        <div class="stat-value">73%</div>
+        <div class="stat-sub">% of income saved</div>
+      </div>
+    </div>
+
+    <!-- Bottom row -->
+    <div class="bottom-row">
+      <!-- Bar chart -->
+      <div class="chart-card">
+        <div class="card-title">Income vs Expenses</div>
+        <div class="bar-chart">
+          <div class="bar-group">
+            <div class="bar bar-income" style="height:72px"></div>
+            <div class="bar bar-expense" style="height:28px"></div>
+          </div>
+          <div class="bar-group">
+            <div class="bar bar-income" style="height:80px"></div>
+            <div class="bar bar-expense" style="height:38px"></div>
+          </div>
+          <div class="bar-group">
+            <div class="bar bar-income" style="height:88px"></div>
+            <div class="bar bar-expense" style="height:24px"></div>
+          </div>
+        </div>
+        <div class="bar-labels">
+          <span class="bar-label">Mar</span>
+          <span class="bar-label">Apr</span>
+          <span class="bar-label">May</span>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Income</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Expenses</div>
+        </div>
+      </div>
+
+      <!-- AI Insights -->
+      <div class="ai-card">
+        <div class="ai-title">🤖 AI Financial Advisor</div>
+        <div class="ai-sub">Powered by Claude AI • personalized insights</div>
+        <div class="ai-insights">
+          <div class="insight success">
+            <div class="insight-icon">✅</div>
+            <div class="insight-title">Excellent savings rate</div>
+            <div class="insight-msg">73% savings rate is outstanding — keep this momentum going.</div>
+          </div>
+          <div class="insight warning">
+            <div class="insight-icon">⚠️</div>
+            <div class="insight-title">Shopping near limit</div>
+            <div class="insight-msg">₦22K spent of ₦40K budget. Watch spending this week.</div>
+          </div>
+          <div class="insight tip">
+            <div class="insight-icon">💡</div>
+            <div class="insight-title">Boost emergency fund</div>
+            <div class="insight-msg">Redirect ₦30K monthly to hit your 6-month target faster.</div>
+          </div>
+          <div class="insight success">
+            <div class="insight-icon">🎯</div>
+            <div class="insight-title">MacBook goal on track</div>
+            <div class="insight-msg">40% saved. At this rate you'll hit it in 3 months.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category spending -->
+  <div style="padding: 0 32px 0 32px;">
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px;">Spending by Category</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;">
+        <!-- Food -->
+        <div style="text-align:center;">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#fef3c7,#fde68a);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 6px;">🍔</div>
+          <div style="font-size:9px;font-weight:600;color:#64748b;">Food</div>
+          <div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:2px;">₦26K</div>
+          <div style="height:4px;background:#f1f5f9;border-radius:4px;margin-top:4px;"><div style="height:4px;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:4px;width:74%"></div></div>
+        </div>
+        <!-- Transport -->
+        <div style="text-align:center;">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 6px;">🚙</div>
+          <div style="font-size:9px;font-weight:600;color:#64748b;">Transport</div>
+          <div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:2px;">₦9.5K</div>
+          <div style="height:4px;background:#f1f5f9;border-radius:4px;margin-top:4px;"><div style="height:4px;background:linear-gradient(90deg,#3b82f6,#2563eb);border-radius:4px;width:63%"></div></div>
+        </div>
+        <!-- Utilities -->
+        <div style="text-align:center;">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#fef9c3,#fef08a);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 6px;">⚡</div>
+          <div style="font-size:9px;font-weight:600;color:#64748b;">Utilities</div>
+          <div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:2px;">₦22K</div>
+          <div style="height:4px;background:#f1f5f9;border-radius:4px;margin-top:4px;"><div style="height:4px;background:linear-gradient(90deg,#eab308,#ca8a04);border-radius:4px;width:88%"></div></div>
+        </div>
+        <!-- Entertainment -->
+        <div style="text-align:center;">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f3e8ff,#e9d5ff);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 6px;">🎭</div>
+          <div style="font-size:9px;font-weight:600;color:#64748b;">Entertain.</div>
+          <div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:2px;">₦14K</div>
+          <div style="height:4px;background:#f1f5f9;border-radius:4px;margin-top:4px;"><div style="height:4px;background:linear-gradient(90deg,#a855f7,#9333ea);border-radius:4px;width:70%"></div></div>
+        </div>
+        <!-- Shopping -->
+        <div style="text-align:center;">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#fce7f3,#fbcfe8);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 6px;">🛒</div>
+          <div style="font-size:9px;font-weight:600;color:#64748b;">Shopping</div>
+          <div style="font-size:11px;font-weight:800;color:#ef4444;margin-top:2px;">₦22K</div>
+          <div style="height:4px;background:#f1f5f9;border-radius:4px;margin-top:4px;"><div style="height:4px;background:linear-gradient(90deg,#ef4444,#dc2626);border-radius:4px;width:55%"></div></div>
+        </div>
+        <!-- Health -->
+        <div style="text-align:center;">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#dcfce7,#bbf7d0);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 6px;">🏥</div>
+          <div style="font-size:9px;font-weight:600;color:#64748b;">Health</div>
+          <div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:2px;">₦12K</div>
+          <div style="height:4px;background:#f1f5f9;border-radius:4px;margin-top:4px;"><div style="height:4px;background:linear-gradient(90deg,#10b981,#059669);border-radius:4px;width:80%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live badge -->
+  <div class="badge">
+    <div class="badge-dot"></div>
+    personal-finance-tracker-sigma-gilt.vercel.app
+  </div>
+</div>
+</body>
+</html>

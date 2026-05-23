@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useToast } from "../components/Toast";
+import { PageSkeleton } from "../components/Skeleton";
 import {
   PieChart,
   Pie,
@@ -157,6 +159,7 @@ function Modal({
 
 export function ExpensesPage() {
   const token = localStorage.getItem("token");
+  const { toast } = useToast();
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -241,8 +244,10 @@ export function ExpensesPage() {
       await loadExpenses();
       resetForm();
       setIsModalOpen(false);
+      toast(editingId ? "Expense updated!" : "Expense added!", "success");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -281,8 +286,10 @@ export function ExpensesPage() {
       });
       if (!res.ok) throw new Error("Failed to delete expense");
       setExpenses((prev) => prev.filter((expense) => expense.id !== id));
+      toast("Expense deleted", "info");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -476,14 +483,7 @@ export function ExpensesPage() {
         </div>
       )}
 
-      {loading && (
-        <div className="flex justify-center items-center h-96">
-          <div className="text-center">
-            <div className="inline-block w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4" />
-            <p className="text-slate-600 font-medium">Loading your expense data...</p>
-          </div>
-        </div>
-      )}
+      {loading && <PageSkeleton />}
 
       {!loading && (
         <>

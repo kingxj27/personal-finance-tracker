@@ -1,5 +1,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { useToast } from "../components/Toast";
+import { PageSkeleton } from "../components/Skeleton";
 import {
   BarChart,
   Bar,
@@ -157,6 +159,7 @@ export function IncomePage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const token = localStorage.getItem("token");
+  const { toast } = useToast();
 
   async function loadIncome() {
     setLoading(true);
@@ -208,8 +211,10 @@ export function IncomePage() {
       await loadIncome();
       resetForm();
       setIsModalOpen(false);
+      toast(editingId ? "Income updated!" : "Income added!", "success");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -224,8 +229,10 @@ export function IncomePage() {
       });
       if (!res.ok) throw new Error("Failed to delete income");
       setIncomeEntries((prev) => prev.filter((entry) => entry.id !== id));
+      toast("Income deleted", "info");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -363,14 +370,7 @@ export function IncomePage() {
         </div>
       )}
 
-      {loading && (
-        <div className="flex justify-center items-center h-96">
-          <div className="text-center">
-            <div className="inline-block w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4" />
-            <p className="text-slate-600 font-medium">Loading your income data...</p>
-          </div>
-        </div>
-      )}
+      {loading && <PageSkeleton />}
 
       {!loading && (
         <>

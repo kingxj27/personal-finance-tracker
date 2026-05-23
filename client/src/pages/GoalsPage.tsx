@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE_URL, authHeaders } from "../api";
 import { Layout } from "../components/Layout";
+import { useToast } from "../components/Toast";
+import { PageSkeleton } from "../components/Skeleton";
+import { AnimatedNGN } from "../components/AnimatedNumber";
 
 /* --- Types --- */
 type Goal = {
@@ -121,6 +124,7 @@ export function GoalsPage() {
   const [contributionAmount, setContributionAmount] = useState<number | "">("");
 
   const token = localStorage.getItem("token");
+  const { toast } = useToast();
 
   async function loadGoals() {
     setLoading(true);
@@ -170,8 +174,10 @@ export function GoalsPage() {
       setName("");
       setTargetAmount("");
       setSavedAmount("");
+      toast("Goal created!", "success");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -196,8 +202,10 @@ export function GoalsPage() {
       await loadGoals();
       setContributionGoalId(null);
       setContributionAmount("");
+      toast("Contribution added! 🎉", "success");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -212,8 +220,10 @@ export function GoalsPage() {
       });
       if (!res.ok) throw new Error("Failed to delete goal");
       setGoals((prev) => prev.filter((goal) => goal.id !== goalId));
+      toast("Goal deleted", "info");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -280,14 +290,7 @@ export function GoalsPage() {
         </div>
       )}
 
-      {loading && (
-        <div className="flex justify-center items-center h-96">
-          <div className="text-center">
-            <div className="inline-block w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4" />
-            <p className="text-slate-600 font-medium">Loading your goals...</p>
-          </div>
-        </div>
-      )}
+      {loading && <PageSkeleton />}
 
       {!loading && (
         <>

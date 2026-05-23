@@ -5,6 +5,8 @@ import { Layout } from "../components/Layout";
 import { RecentTransactions } from "../components/RecentTransactions";
 import { IncomeExpenseChart } from "../components/IncomeExpenseChart";
 import { generatePDFReport } from "../utils/pdfReport";
+import { AnimatedNGN, AnimatedPercent } from "../components/AnimatedNumber";
+import { PageSkeleton } from "../components/Skeleton";
 
 /* --- Types --- */
 type CategorySummary = { category: string; spent: number; budget: number };
@@ -44,119 +46,90 @@ function formatNGN(amount: number) {
   return "₦" + Math.round(Math.max(0, amount)).toLocaleString();
 }
 
-/* --- Small Reusable Components --- */
+/* --- Stat Card with animated number --- */
 function StatCard({
   title,
-  value,
+  amount,
+  isPercent,
   subtitle,
   emoji,
-  colorClasses = "from-white to-white",
   borderClass = "border-slate-200",
+  valueColor = "text-slate-900",
 }: {
   title: string;
-  value: string | React.ReactNode;
+  amount?: number;
+  isPercent?: boolean;
   subtitle?: string;
   emoji?: string;
-  colorClasses?: string;
   borderClass?: string;
+  valueColor?: string;
 }) {
   return (
-    <div
-      className={`rounded-xl border ${borderClass} bg-gradient-to-br ${colorClasses} p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
-      style={{
-        boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.12)';
-        e.currentTarget.style.transform = 'translateY(-3px)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)';
-        e.currentTarget.style.transform = 'translateY(0)';
-      }}
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">
-            {title}
-          </p>
-          <p className="mt-3 text-3xl md:text-4xl font-bold text-slate-900">{value}</p>
-          {subtitle && <p className="mt-2 text-xs text-slate-500 font-medium">{subtitle}</p>}
-        </div>
+    <div className={`group rounded-xl border ${borderClass} bg-white p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}>
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{title}</p>
         {emoji && (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md text-2xl">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 group-hover:bg-emerald-50 text-xl transition-colors duration-300">
             {emoji}
           </div>
         )}
       </div>
+      <p className={`text-3xl font-extrabold tabular-nums ${valueColor}`}>
+        {amount !== undefined && !isPercent && <AnimatedNGN value={amount} />}
+        {amount !== undefined && isPercent && <AnimatedPercent value={amount} />}
+      </p>
+      {subtitle && <p className="mt-2 text-xs text-slate-400 font-medium">{subtitle}</p>}
     </div>
   );
 }
 
-function CategoryCard({ cat }: { cat: CategorySummary }) {
+function CategoryCard({ cat, index }: { cat: CategorySummary; index: number }) {
+  const [barWidth, setBarWidth] = useState(0);
   const percent = cat.budget > 0 ? Math.min(100, (cat.spent / cat.budget) * 100) : 0;
   const isOverBudget = cat.budget > 0 && cat.spent > cat.budget;
-  const isNearLimit = percent > 75;
+  const isNearLimit = percent > 75 && !isOverBudget;
   const progressColor = isOverBudget
-    ? "bg-gradient-to-r from-red-400 to-red-600"
+    ? "from-red-400 to-red-500"
     : isNearLimit
-      ? "bg-gradient-to-r from-yellow-400 to-yellow-600"
-      : "bg-gradient-to-r from-green-400 to-emerald-600";
+    ? "from-amber-400 to-amber-500"
+    : "from-emerald-400 to-green-500";
+
+  useEffect(() => {
+    const t = setTimeout(() => setBarWidth(Math.min(100, percent)), 100 + index * 80);
+    return () => clearTimeout(t);
+  }, [percent, index]);
 
   return (
-    <div 
-      className="rounded-xl border border-slate-200 bg-white p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-      style={{
-        boxShadow: '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.12)';
-        e.currentTarget.style.transform = 'translateY(-3px)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.08)';
-        e.currentTarget.style.transform = 'translateY(0)';
-      }}
-    >
+    <div className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-center gap-3 mb-4">
-        <div
-          className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br shadow-md ${
-            CATEGORY_COLORS[cat.category] || "from-gray-100 to-slate-100"
-          } text-lg font-semibold`}
-          style={{
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.05)',
-          }}
-        >
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${CATEGORY_COLORS[cat.category] || "from-gray-100 to-slate-100"} text-lg`}>
           {CATEGORY_ICONS[cat.category] || "📦"}
         </div>
-        <div className="flex-1">
-          <p className="font-semibold text-slate-900">{cat.category}</p>
-          {cat.budget > 0 && (
-            <p className="text-xs text-slate-500">Budget: {formatNGN(cat.budget)}</p>
-          )}
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-slate-800">{cat.category}</p>
+          {cat.budget > 0 && <p className="text-xs text-slate-400 mt-0.5">Budget: {formatNGN(cat.budget)}</p>}
         </div>
-      </div>
-
-      <div className="mb-3 flex justify-between items-end">
-        <div>
-          <p className="text-xs text-slate-600 font-medium mb-1">Spent</p>
-          <p className="text-2xl font-bold text-slate-900">{formatNGN(cat.spent)}</p>
-        </div>
-        <p className="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg shadow-sm">
+        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${
+          isOverBudget ? "bg-red-50 text-red-600" : isNearLimit ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
+        }`}>
           {Math.round(percent)}%
-        </p>
+        </span>
       </div>
 
-      <div className="h-3 rounded-full bg-gradient-to-r from-slate-200 to-slate-100 overflow-hidden shadow-inner">
+      <p className="text-2xl font-extrabold text-slate-900 tabular-nums mb-3">
+        <AnimatedNGN value={cat.spent} />
+      </p>
+
+      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
         <div
-          className={`h-full rounded-full ${progressColor} transition-all duration-300`}
-          style={{ width: `${Math.min(100, percent)}%` }}
+          className={`h-full rounded-full bg-gradient-to-r ${progressColor} transition-all duration-700 ease-out`}
+          style={{ width: `${barWidth}%` }}
         />
       </div>
 
       {isOverBudget && (
-        <p className="mt-3 text-xs font-semibold text-red-600 flex items-center gap-1">
-          🔴 Over by {formatNGN(cat.spent - cat.budget)}
+        <p className="mt-2.5 text-xs font-semibold text-red-500 flex items-center gap-1">
+          ↑ Over by {formatNGN(cat.spent - cat.budget)}
         </p>
       )}
     </div>
@@ -398,52 +371,43 @@ export function DashboardPage() {
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center h-96">
-          <div className="text-center">
-            <div className="inline-block w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4" />
-            <p className="text-slate-600 font-medium">Loading your dashboard...</p>
-          </div>
-        </div>
-      )}
+      {/* Skeleton loading */}
+      {loading && <PageSkeleton />}
 
       {/* Main Content */}
       {summary && (
         <div className="space-y-8">
           {/* Primary Stats - 4 Column Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Total Income"
-              value={formatNGN(summary.totalIncome)}
+              amount={summary.totalIncome}
               emoji="💰"
-              colorClasses="from-white to-slate-50"
               borderClass="border-slate-200"
               subtitle={new Date().toLocaleString("en-US", { month: "long" })}
             />
             <StatCard
               title="Total Expenses"
-              value={formatNGN(summary.totalExpenses)}
+              amount={summary.totalExpenses}
               emoji="💳"
-              colorClasses="from-white to-slate-50"
               borderClass="border-slate-200"
-              subtitle={`${Math.round((summary.totalExpenses / summary.totalIncome) * 100) || 0}% of income`}
+              subtitle={`${Math.round((summary.totalExpenses / Math.max(1, summary.totalIncome)) * 100)}% of income`}
             />
             <StatCard
               title="Net Balance"
-              value={formatNGN(summary.netBalance)}
+              amount={Math.max(0, summary.netBalance)}
               emoji={summary.netBalance >= 0 ? "📈" : "📉"}
-              colorClasses="from-white to-slate-50"
-              borderClass={summary.netBalance >= 0 ? "border-green-200" : "border-red-200"}
+              borderClass={summary.netBalance >= 0 ? "border-emerald-200" : "border-red-200"}
+              valueColor={summary.netBalance >= 0 ? "text-emerald-600" : "text-red-500"}
               subtitle={summary.netBalance >= 0 ? "You're in good shape!" : "Review spending"}
             />
             <StatCard
               title="Savings Rate"
-              value={`${summary.totalIncome > 0 ? Math.max(0, Math.round(savingsRate)) : 0}%`}
+              amount={summary.totalIncome > 0 ? Math.max(0, Math.round(savingsRate)) : 0}
+              isPercent
               emoji="🎯"
-              colorClasses="from-white to-slate-50"
               borderClass="border-slate-200"
-              subtitle="% of income saved"
+              subtitle="of income saved"
             />
           </div>
 
@@ -504,8 +468,8 @@ export function DashboardPage() {
                 <p className="mt-1 text-sm text-slate-600">Monitor your expenses across different categories</p>
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {summary.categories.map((cat) => (
-                  <CategoryCard key={cat.category} cat={cat} />
+                {summary.categories.map((cat, i) => (
+                  <CategoryCard key={cat.category} cat={cat} index={i} />
                 ))}
               </div>
             </div>

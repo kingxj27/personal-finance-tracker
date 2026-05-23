@@ -11,6 +11,9 @@ import {
 } from "recharts";
 import { API_BASE_URL, authHeaders } from "../api";
 import { Layout } from "../components/Layout";
+import { useToast } from "../components/Toast";
+import { PageSkeleton } from "../components/Skeleton";
+import { AnimatedNGN } from "../components/AnimatedNumber";
 
 /* --- Types --- */
 type Budget = {
@@ -114,6 +117,7 @@ const StatCard = ({
 export function BudgetsPage() {
   const token = localStorage.getItem("token");
   const now = new Date();
+  const { toast } = useToast();
 
   /* --- State --- */
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -200,8 +204,10 @@ export function BudgetsPage() {
 
       await loadBudgets();
       resetForm();
+      toast("Budget saved!", "success");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -217,8 +223,10 @@ export function BudgetsPage() {
 
       if (!res.ok) throw new Error("Failed to delete budget");
       setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
+      toast("Budget deleted", "info");
     } catch (err) {
       setError((err as Error).message);
+      toast((err as Error).message, "error");
     }
   }
 
@@ -497,7 +505,7 @@ export function BudgetsPage() {
         {/* Budget Cards */}
         <div>
           <h3 className="mb-6 text-lg font-semibold text-slate-900">💳 Your Budgets</h3>
-          {loading && <p className="text-sm text-slate-500">Loading budgets...</p>}
+          {loading && <PageSkeleton />}
 
           {!loading && budgets.length === 0 ? (
             <div 
