@@ -1,9 +1,11 @@
 /* Shimmer skeleton components — drop-in replacements for loading states */
+import type React from "react";
 
-function Shimmer({ className }: { className?: string }) {
+function Shimmer({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <div
       className={`relative overflow-hidden rounded-lg bg-slate-100 ${className ?? ""}`}
+      style={style}
     >
       <div
         className="absolute inset-0 -translate-x-full"

@@ -240,7 +240,6 @@ export function DashboardPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [pdfLoading, setPdfLoading] = useState(false);
   const persona = (localStorage.getItem("persona") ?? "YOUNG_PROFESSIONAL") as "STUDENT" | "YOUNG_PROFESSIONAL" | "INVESTOR";
-  const { format: formatCurrency } = useCurrency();
 
   useEffect(() => {
     const controller = new AbortController();
