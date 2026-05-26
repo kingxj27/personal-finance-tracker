@@ -17,6 +17,7 @@ import {
 import { API_BASE_URL, authHeaders } from "../api";
 import { Layout } from "../components/Layout";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { X, Pencil, Trash2 } from "lucide-react";
 
 type IncomeEntry = {
   id: string;
@@ -122,10 +123,10 @@ function Modal({
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
             <button
               onClick={onClose}
-              className="rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded-full p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
               aria-label="Close modal"
             >
-              ✕
+              <X size={16} strokeWidth={2} />
             </button>
           </div>
         </div>
@@ -585,14 +586,16 @@ export function IncomePage() {
                       <div className="md:ml-4 flex gap-2">
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 transition-colors"
                         >
+                          <Pencil size={12} strokeWidth={2} />
                           Edit
                         </button>
                         <button
                           onClick={() => void handleDelete(entry.id)}
-                          className="rounded-lg px-3 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30"
+                          className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-1.5 transition-colors"
                         >
+                          <Trash2 size={12} strokeWidth={2} />
                           Delete
                         </button>
                       </div>

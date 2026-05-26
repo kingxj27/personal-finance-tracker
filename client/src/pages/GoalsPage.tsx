@@ -4,6 +4,7 @@ import { Layout } from "../components/Layout";
 import { useToast } from "../components/Toast";
 import { PageSkeleton } from "../components/Skeleton";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { Plus, Trash2, Check } from "lucide-react";
 
 /* --- Types --- */
 type Goal = {
@@ -534,14 +535,16 @@ export function GoalsPage() {
                             <div className="flex flex-col md:flex-row gap-2">
                               <button
                                 onClick={() => setContributionGoalId(goal.id)}
-                                className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
+                                className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 flex items-center gap-2 transition-colors"
                               >
-                                ＋ Add Contribution
+                                <Plus size={14} strokeWidth={2.5} />
+                                Add Contribution
                               </button>
                               <button
                                 onClick={() => void handleDeleteGoal(goal.id)}
-                                className="rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-100"
+                                className="rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 px-4 py-2.5 text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 flex items-center gap-2 transition-colors"
                               >
+                                <Trash2 size={14} strokeWidth={2} />
                                 Delete
                               </button>
                             </div>
@@ -576,8 +579,9 @@ export function GoalsPage() {
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
                           <p className="font-semibold text-slate-900 dark:text-white">{goal.name}</p>
-                          <p className="mt-1 text-sm text-green-700 dark:text-green-400 font-medium">
-                            ✓ Goal achieved! {formatCurrency(goal.savedAmount)} saved by{" "}
+                          <p className="mt-1 text-sm text-green-700 dark:text-green-400 font-medium flex items-center gap-1.5">
+                            <Check size={14} strokeWidth={2.5} />
+                            Goal achieved! {formatCurrency(goal.savedAmount)} saved by{" "}
                             {deadlineDate.toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
@@ -588,8 +592,9 @@ export function GoalsPage() {
 
                         <button
                           onClick={() => void handleDeleteGoal(goal.id)}
-                          className="rounded-lg border border-green-300 bg-white dark:bg-[#161B22] px-3 py-2 text-sm font-medium text-green-700 dark:text-green-400 hover:bg-green-100"
+                          className="rounded-lg border border-green-300 dark:border-green-800/50 bg-white dark:bg-[#161B22] px-3 py-2 text-sm font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center gap-1.5 transition-colors"
                         >
+                          <Trash2 size={13} strokeWidth={2} />
                           Remove
                         </button>
                       </div>

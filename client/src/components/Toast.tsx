@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { CheckCircle2, XCircle, AlertTriangle, Info } from "lucide-react";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -18,11 +19,11 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
-const ICONS: Record<ToastType, string> = {
-  success: "✓",
-  error: "✕",
-  warning: "⚠",
-  info: "ℹ",
+const ICONS: Record<ToastType, React.ReactElement> = {
+  success: <CheckCircle2 size={16} strokeWidth={2} />,
+  error:   <XCircle      size={16} strokeWidth={2} />,
+  warning: <AlertTriangle size={16} strokeWidth={2} />,
+  info:    <Info          size={16} strokeWidth={2} />,
 };
 
 const STYLES: Record<ToastType, { bar: string; icon: string; bg: string; border: string }> = {
@@ -81,7 +82,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${s.bar} rounded-l-xl`} />
 
       {/* Icon */}
-      <div className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${s.icon}`}>
+      <div className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full ${s.icon}`}>
         {ICONS[toast.type]}
       </div>
 

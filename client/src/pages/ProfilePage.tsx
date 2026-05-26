@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE_URL, authHeaders } from "../api";
 import { Layout } from "../components/Layout";
+import { X } from "lucide-react";
 
 /* --- Types --- */
 type UserProfile = {
@@ -136,10 +137,10 @@ function Modal({
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-full p-1 hover:bg-slate-100"
+            className="rounded-full p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
             aria-label="Close modal"
           >
-            ✕
+            <X size={16} strokeWidth={2} />
           </button>
         </div>
         <div className="mt-4">{children}</div>

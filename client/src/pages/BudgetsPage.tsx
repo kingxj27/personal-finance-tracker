@@ -14,6 +14,7 @@ import { Layout } from "../components/Layout";
 import { useToast } from "../components/Toast";
 import { PageSkeleton } from "../components/Skeleton";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { Trash2, Check } from "lucide-react";
 
 /* --- Types --- */
 type Budget = {
@@ -602,16 +603,20 @@ export function BudgetsPage() {
                         </p>
                       )}
                       {!isOverBudget && (
-                        <p className="text-xs text-green-600 dark:text-green-400">✓ {formatCurrency(remaining)} remaining</p>
+                        <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                          <Check size={11} strokeWidth={2.5} />
+                          {formatCurrency(remaining)} remaining
+                        </p>
                       )}
                     </div>
 
                     <div className="ml-4">
                       <button
                         onClick={() => void handleDelete(budget.id)}
-                        className="rounded-lg border border-red-300 bg-red-50 px-3 py-1 text-xs font-medium text-red-700 transition-all duration-300 hover:bg-red-100 hover:shadow-md shadow-sm"
+                        className="rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-400 transition-all duration-200 hover:bg-red-100 dark:hover:bg-red-900/40 flex items-center gap-1.5"
                       >
-                        🗑️ Delete
+                        <Trash2 size={12} strokeWidth={2} />
+                        Delete
                       </button>
                     </div>
                   </div>

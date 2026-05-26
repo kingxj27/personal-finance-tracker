@@ -8,6 +8,7 @@ import { generatePDFReport } from "../utils/pdfReport";
 import { AnimatedNGN, AnimatedPercent } from "../components/AnimatedNumber";
 import { PageSkeleton } from "../components/Skeleton";
 import { useCurrency } from "../contexts/CurrencyContext";
+import { FileDown, RefreshCw, Loader2 } from "lucide-react";
 
 /* --- Types --- */
 type CategorySummary = { category: string; spent: number; budget: number };
@@ -332,14 +333,18 @@ export function DashboardPage() {
               disabled={pdfLoading || !summary}
               className="rounded-lg border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] px-4 py-2.5 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition flex items-center gap-2 disabled:opacity-50"
             >
-              {pdfLoading ? <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" /> : "📄"}
+              {pdfLoading
+                ? <Loader2 size={15} className="animate-spin" />
+                : <FileDown size={15} strokeWidth={1.75} />
+              }
               PDF Report
             </button>
             <button
               onClick={() => setReloadKey((k) => k + 1)}
               className="rounded-lg border border-green-200 bg-white dark:bg-[#161B22] px-4 py-2.5 font-medium text-green-700 hover:bg-green-50 transition flex items-center gap-2"
             >
-              <span>↻</span> Refresh
+              <RefreshCw size={14} strokeWidth={1.75} />
+              Refresh
             </button>
           </div>
         </div>
