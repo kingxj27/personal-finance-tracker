@@ -1,12 +1,12 @@
-﻿
+
 # Personal Finance Tracker
-# 💰 Personal Finance Tracker
+# 💲Personal Finance Tracker
 
 A modern, full-featured personal finance web application designed to help users manage income, expenses, and savings goals with clear insights and a clean user interface.
 
 ---
 
-## 🚀 Overview
+## Overview
 
 This project is a **fintech focused web application** that allows users to track their financial activity, visualize spending patterns, and stay on top of their financial goals.
 
@@ -20,7 +20,7 @@ It is built with a strong emphasis on:
 
 ## ✨ Core Features
 
-### 📊 Dashboard
+### Dashboard
 
 * Overview of total income, expenses, and net balance
 * Monthly financial insights
@@ -34,7 +34,7 @@ It is built with a strong emphasis on:
 * Category based breakdown
 * Visual analytics
 
-### 💸 Expenses Page
+### Expenses Page
 
 * Track expenses by category
 * Advanced filtering (date, category, amount)
@@ -42,7 +42,7 @@ It is built with a strong emphasis on:
 * CSV export functionality
 * Category-based visual charts
 
-### 🎯 Goals Page
+### Goals Page
 
 * Create and manage savings goals
 * Track progress with dynamic progress bars
