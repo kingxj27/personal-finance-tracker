@@ -33,7 +33,6 @@ export function IncomeExpenseChart({
   totalExpenses,
   netBalance,
 }: IncomeExpenseChartProps) {
-  // Use provided data or create mock data for current month
   const chartData = useMemo(() => {
     if (data && data.length > 0) {
       return data;
@@ -64,87 +63,53 @@ export function IncomeExpenseChart({
   };
 
   return (
-    <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-6 shadow-sm">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-slate-900">
-          Income vs Expenses
-        </h2>
-        <p className="mt-1 text-sm text-slate-600">Monthly comparison</p>
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] p-6">
+      <div className="mb-5">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Income vs Expenses</h2>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Monthly comparison</p>
       </div>
 
-      {/* Chart */}
-      <div className="mb-6 -mx-6 overflow-x-auto px-6">
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="#f0f0f0"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="month"
-              stroke="#9ca3af"
-              style={{ fontSize: "12px" }}
-            />
-            <YAxis
-              stroke="#9ca3af"
-              tickFormatter={formatNGN}
-              style={{ fontSize: "12px" }}
-            />
+      <div className="mb-5 -mx-6 overflow-x-auto px-6">
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+            <XAxis dataKey="month" stroke="#9ca3af" style={{ fontSize: "12px" }} />
+            <YAxis stroke="#9ca3af" tickFormatter={formatNGN} style={{ fontSize: "12px" }} />
             <Tooltip
               formatter={(value) => formatNGN(value as number)}
               contentStyle={{
                 backgroundColor: "#fff",
                 border: "1px solid #e5e7eb",
                 borderRadius: "8px",
+                fontSize: "13px",
               }}
-              cursor={{ fill: "rgba(251, 191, 36, 0.1)" }}
+              cursor={{ fill: "rgba(16, 185, 129, 0.06)" }}
             />
-            <Legend
-              wrapperStyle={{ paddingTop: "20px" }}
-              iconType="square"
-            />
-            <Bar dataKey="income" fill="#10b981" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="expenses" fill="#ef4444" radius={[8, 8, 0, 0]} />
+            <Legend wrapperStyle={{ paddingTop: "16px", fontSize: "12px" }} iconType="square" />
+            <Bar dataKey="income" fill="#10b981" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="expenses" fill="#ef4444" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border border-green-100 bg-green-50 p-4">
-          <p className="text-xs font-medium text-green-700">Total Income</p>
-          <p className="mt-2 text-xl font-bold text-green-900">
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700/50 p-3.5">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Income</p>
+          <p className="mt-1.5 text-lg font-bold text-slate-900 dark:text-white">
             ₦{totalIncome.toLocaleString()}
           </p>
         </div>
 
-        <div className="rounded-lg border border-red-100 bg-red-50 p-4">
-          <p className="text-xs font-medium text-red-700">Total Expenses</p>
-          <p className="mt-2 text-xl font-bold text-red-900">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700/50 p-3.5">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Expenses</p>
+          <p className="mt-1.5 text-lg font-bold text-slate-900 dark:text-white">
             ₦{totalExpenses.toLocaleString()}
           </p>
         </div>
 
-        <div
-          className={`rounded-lg border p-4 ${
-            netBalance >= 0
-              ? "border-blue-100 bg-blue-50"
-              : "border-orange-100 bg-orange-50"
-          }`}
-        >
-          <p
-            className={`text-xs font-medium ${
-              netBalance >= 0 ? "text-blue-700" : "text-orange-700"
-            }`}
-          >
-            Net Balance
-          </p>
-          <p
-            className={`mt-2 text-xl font-bold ${
-              netBalance >= 0 ? "text-blue-900" : "text-orange-900"
-            }`}
-          >
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700/50 p-3.5">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Net Balance</p>
+          <p className={`mt-1.5 text-lg font-bold ${netBalance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
             ₦{netBalance.toLocaleString()}
           </p>
         </div>

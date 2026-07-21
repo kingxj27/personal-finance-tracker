@@ -1,5 +1,5 @@
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api";
 
@@ -21,10 +21,14 @@ export function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const demoTriggered = useRef(false);
 
-  // If navigated from landing page "Try Demo", auto-trigger demo login
+  // If navigated from landing page "Try Demo", auto-trigger demo login.
+  // Guarded against React StrictMode's dev-mode double-invoke, which would
+  // otherwise fire two concurrent seed requests racing on the same unique user row.
   useEffect(() => {
-    if ((location.state as any)?.demo) {
+    if ((location.state as any)?.demo && !demoTriggered.current) {
+      demoTriggered.current = true;
       handleDemoLogin();
     }
   }, []);

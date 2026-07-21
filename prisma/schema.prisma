@@ -10,8 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 enum UserPersona {
@@ -27,10 +26,16 @@ model User {
   persona   UserPersona @default(YOUNG_PROFESSIONAL)
   createdAt DateTime    @default(now())
 
-  budgets   Budget[]
-  expenses  Expense[]
-  goals     Goal[]
-  incomes   Income[]
+  budgets    Budget[]
+  expenses   Expense[]
+  goals      Goal[]
+  incomes    Income[]
+
+  locations   Location[]
+  batches     Batch[]
+  products    Product[]
+  sales       Sale[]
+  weeklyLogs  WeeklyLogEntry[]
 }
 
 model Budget {
@@ -50,10 +55,12 @@ model Expense {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
   userId    String
+  title     String
   amount    Int
   category  String
   date      DateTime
   note      String?
+  recurring Boolean  @default(false)
   createdAt DateTime @default(now())
 }
 
@@ -72,10 +79,116 @@ model Income {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
   userId    String
+  title     String
   amount    Int
-  month     Int
-  year      Int
+  source    String
+  date      DateTime
+  notes     String?
   createdAt DateTime @default(now())
+}
 
-  @@unique([userId, month, year])
+// --- Business (inventory/sales) module ---
+
+model Location {
+  id                             String   @id @default(uuid())
+  user                           User     @relation(fields: [userId], references: [id])
+  userId                         String
+  name                           String
+  discountApprovalThreshold      Int      @default(15) // % — above this, a sale needs owner approval
+  lowStockThreshold              Int      @default(5) // units
+  onlineCommissionDefaultPercent Int      @default(2) // prefills the commission field on online sales
+  createdAt                      DateTime @default(now())
+
+  products   Product[]
+  batches    Batch[]
+  sales      Sale[]
+  weeklyLogs WeeklyLogEntry[]
+
+  @@unique([userId, name])
+}
+
+model Batch {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  location   Location @relation(fields: [locationId], references: [id])
+  locationId String
+  label      String
+  totalUnits Int
+  totalCost  Int
+  dateAdded  DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  location   Location @relation(fields: [locationId], references: [id])
+  locationId String
+  batch      Batch?   @relation(fields: [batchId], references: [id])
+  batchId    String?
+  name       String
+  category   String
+  unitCost   Int
+  salePrice  Int
+  quantity   Int
+  dateAdded  DateTime @default(now())
+  archived   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sales Sale[]
+}
+
+enum SaleChannel {
+  IN_PERSON
+  ONLINE
+}
+
+enum ApprovalStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Sale {
+  id                String         @id @default(uuid())
+  user              User           @relation(fields: [userId], references: [id])
+  userId            String
+  location          Location       @relation(fields: [locationId], references: [id])
+  locationId        String
+  product           Product        @relation(fields: [productId], references: [id])
+  productId         String
+  quantity          Int
+  priceSold         Int
+  unitCostAtSale     Int
+  channel           SaleChannel    @default(IN_PERSON)
+  isDiscounted      Boolean        @default(false)
+  discountPercent   Int            @default(0)
+  commissionPercent Float?
+  commissionAmount  Int?
+  needsApproval     Boolean        @default(false)
+  approvalStatus    ApprovalStatus @default(NONE)
+  date              DateTime
+  createdAt         DateTime       @default(now())
+}
+
+enum LogType {
+  COMPLAINT
+  STAFF_ISSUE
+}
+
+model WeeklyLogEntry {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  location   Location @relation(fields: [locationId], references: [id])
+  locationId String
+  date       DateTime
+  type       LogType
+  text       String
+  createdAt  DateTime @default(now())
 }

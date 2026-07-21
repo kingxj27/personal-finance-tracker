@@ -14,6 +14,7 @@ import {
   Moon,
   ChevronDown,
   Check,
+  Store,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useCurrency, CURRENCIES } from "../contexts/CurrencyContext";
@@ -31,6 +32,7 @@ const NAV_LINKS = [
   { to: "/income",    label: "Income",    Icon: TrendingUp      },
   { to: "/expenses",  label: "Expenses",  Icon: TrendingDown    },
   { to: "/goals",     label: "Goals",     Icon: Target          },
+  { to: "/business/dashboard", label: "Business", Icon: Store   },
   { to: "/profile",   label: "Profile",   Icon: CircleUser      },
 ];
 

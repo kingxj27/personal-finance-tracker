@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { API_BASE_URL, authHeaders } from "../api";
+import { Utensils, Car, Zap, Clapperboard, ShoppingBag, HeartPulse, Package, Inbox } from "lucide-react";
 
 type Transaction = {
   id: string;
@@ -9,24 +10,14 @@ type Transaction = {
   description?: string;
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
-  Food: "🍔",
-  Transport: "🚗",
-  Utilities: "💡",
-  Entertainment: "🎬",
-  Shopping: "🛍️",
-  Health: "⚕️",
-  Other: "📦",
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Food: "bg-amber-100 text-amber-700",
-  Transport: "bg-blue-100 text-blue-700",
-  Utilities: "bg-yellow-100 text-yellow-700",
-  Entertainment: "bg-purple-100 text-purple-700",
-  Shopping: "bg-pink-100 text-pink-700",
-  Health: "bg-green-100 text-green-700",
-  Other: "bg-gray-100 text-gray-700",
+const CATEGORY_ICONS: Record<string, typeof Utensils> = {
+  Food: Utensils,
+  Transport: Car,
+  Utilities: Zap,
+  Entertainment: Clapperboard,
+  Shopping: ShoppingBag,
+  Health: HeartPulse,
+  Other: Package,
 };
 
 export function RecentTransactions() {
@@ -45,26 +36,24 @@ export function RecentTransactions() {
           throw new Error("Unable to load transactions");
         }
         const data = await res.json();
-        
-        // Transform to expected format and sort by date descending
+
         const transformed = (data.expenses || [])
           .map((exp: any) => ({
             id: exp.id || Math.random().toString(),
             category: exp.category || "Other",
             amount: exp.amount || 0,
             date: exp.date || new Date().toISOString(),
-            description: exp.description || "",
+            description: exp.title || exp.description || "",
           }))
           .sort(
             (a: Transaction, b: Transaction) =>
               new Date(b.date).getTime() - new Date(a.date).getTime()
           )
-          .slice(0, 10); // Get last 10
+          .slice(0, 10);
 
         setTransactions(transformed);
       } catch (err) {
         setError((err as Error).message);
-        // Fallback: show empty state
         setTransactions([]);
       } finally {
         setLoading(false);
@@ -91,16 +80,16 @@ export function RecentTransactions() {
   };
 
   return (
-    <div className="rounded-2xl border border-amber-100 bg-gradient-to-b from-white to-amber-50 p-6 shadow-sm">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Recent Transactions</h2>
-        <a href="/expenses" className="text-sm font-medium text-amber-600 hover:text-amber-700">
-          View All →
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#161B22] p-6">
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Recent Transactions</h2>
+        <a href="/expenses" className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
+          View all
         </a>
       </div>
 
       {loading && (
-        <p className="text-sm text-slate-500" role="status">
+        <p className="text-sm text-slate-500 dark:text-slate-400" role="status">
           Loading transactions...
         </p>
       )}
@@ -110,46 +99,42 @@ export function RecentTransactions() {
       )}
 
       {!loading && transactions.length === 0 && (
-        <div className="rounded-lg border border-dashed border-amber-200 bg-white p-8 text-center">
-          <p className="text-lg">📋</p>
-          <p className="mt-2 text-sm font-medium text-slate-600">No transactions yet</p>
+        <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700/50 p-8 text-center">
+          <Inbox size={20} className="mx-auto text-slate-400 mb-2" strokeWidth={1.75} />
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">No transactions yet</p>
           <p className="mt-1 text-xs text-slate-500">Start tracking your expenses</p>
         </div>
       )}
 
       {!loading && transactions.length > 0 && (
-        <div className="space-y-3">
-          {transactions.map((tx) => (
-            <div
-              key={tx.id}
-              className="flex items-center gap-4 rounded-lg border border-slate-100 bg-white p-4 hover:shadow-sm transition"
-            >
-              {/* Icon */}
+        <div className="space-y-2">
+          {transactions.map((tx) => {
+            const Icon = CATEGORY_ICONS[tx.category] ?? Package;
+            return (
               <div
-                className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-lg ${
-                  CATEGORY_COLORS[tx.category] || CATEGORY_COLORS.Other
-                }`}
+                key={tx.id}
+                className="flex items-center gap-4 rounded-lg border border-slate-100 dark:border-slate-800 p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
               >
-                {CATEGORY_ICONS[tx.category] || CATEGORY_ICONS.Other}
-              </div>
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400">
+                  <Icon size={16} strokeWidth={1.75} />
+                </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-slate-900">{tx.category}</p>
-                <p className="text-xs text-slate-500">
-                  {tx.description || formatDate(tx.date)}
-                </p>
-              </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-slate-900 dark:text-white">{tx.category}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500 truncate">
+                    {tx.description || formatDate(tx.date)}
+                  </p>
+                </div>
 
-              {/* Amount */}
-              <div className="flex flex-col items-end">
-                <p className="font-semibold text-slate-900">
-                  -{formatAmount(tx.amount)}
-                </p>
-                <p className="text-xs text-slate-400">{formatDate(tx.date)}</p>
+                <div className="flex flex-col items-end shrink-0">
+                  <p className="font-semibold text-sm text-slate-900 dark:text-white">
+                    -{formatAmount(tx.amount)}
+                  </p>
+                  <p className="text-xs text-slate-400">{formatDate(tx.date)}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
